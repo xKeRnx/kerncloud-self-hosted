@@ -1,0 +1,43 @@
+name: Linux installed application
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/linux-installer.yml
+      - desktop-app/tests/linux-installed.sh
+      - scripts/test-installed-preservation.mjs
+permissions:
+  contents: read
+jobs:
+  lifecycle:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: desktop-app/package-lock.json
+      - name: Prepare desktop payload
+        run: node scripts/desktop-payload.mjs
+      - run: npm ci
+        working-directory: desktop-app
+      - name: Build Linux packages
+        run: node scripts/build.cjs linux x64
+        working-directory: desktop-app
+      - name: Test installed desktop and local services
+        run: sh desktop-app/tests/linux-installed.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: linux-installed-proof
+          path: test-results/linux-installed/*.json
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-tested-packages
+          path: |
+            desktop-app/dist/*.deb
+            desktop-app/dist/*.AppImage
