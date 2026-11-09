@@ -40,6 +40,6 @@ export async function selfHostedEditionTests(t: any, { request, pool, admin }: a
     assert.equal((await request('admin/customers/'+id,{...body,proof:{password:'invalid-password',code:''}},admin.cookie)).status,401);
     assert.equal((await request('admin/customers/'+id,{...body,proof},admin.cookie)).status,200);
     assert.equal((await request('auth/status',undefined,cookie)).data.authenticated,false);
-    assert.equal((await request('auth/login',{email,password})).status,403);
+    assert.equal((await request('auth/login',{email,password})).status,401);
   });
 }

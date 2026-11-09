@@ -65,7 +65,7 @@ async function listen(server: ReturnType<typeof createServer>) {
   return `http://127.0.0.1:${address.port}`;
 }
 test(
-  "SaaS: Isolation, Adminrechte, Guthaben und reale Worker-Delegation mit lokaler Protokoll-Fixture",
+  selfHostedEdition ? "Self-hosted: isolation, local access, budgets and real workers with local protocol fixtures" : "SaaS: Isolation, Adminrechte, Guthaben und reale Worker-Delegation mit lokaler Protokoll-Fixture",
   { timeout: 420000 },
   async (t) => {
     // This suite uses a dedicated disposable database, never the local user's workspace database.
