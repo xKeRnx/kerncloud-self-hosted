@@ -1,0 +1,16 @@
+# Use only after configuring a dedicated base domain, wildcard DNS and PUBLIC_ENVIRONMENT_URL=https://that-domain.
+services:
+  environment-https:
+    image: caddy:2
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?Configure an operator email before using public HTTPS}
+    ports: ["80:80", "443:443", "443:443/udp"]
+    volumes:
+      - ./deploy/Caddyfile.environments:/etc/caddy/Caddyfile:ro
+      - environment_caddy_data:/data
+      - environment_caddy_config:/config
+    depends_on: [gateway]
+    restart: unless-stopped
+volumes:
+  environment_caddy_data:
+  environment_caddy_config:

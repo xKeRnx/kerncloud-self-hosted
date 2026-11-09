@@ -1,0 +1,55 @@
+# Lokale Erweiterung 0.2
+
+## Bedienung
+
+- **Öffentliche Startseite:** `/` zeigt die Landingpage mit dem Aufbau des alten Projekts: Hero, Vorschau, Funktionen, Schritte und Planübersicht. Auf den aktuellen Funktionsumfang angepasst, ohne erfundene Kundenlogos, Testphasen oder unbegrenzte Leistungen. Vorschau klar als Beispieldaten gekennzeichnet. Aktive Pläne und Preise kommen aus der eigenen Datenbank. Workspace-Start jetzt `/overview`; Anmeldung `/login`, Registrierung `/signup`. Bereits angemeldete Nutzer gelangen von den Anmeldeseiten in ihren Workspace. Der öffentliche Footer hat keinen Sidebar-Abstand.
+- **Richtext für Rechtstexte:** In der Administration unter `/admin/legal` mit Tiptap bearbeiten: Überschriften, Fett/Kursiv/Unterstrichen, Listen, Zitate, Links, Trennlinien und Rückgängig/Wiederholen. HTML-Ansicht und serverseitig bereinigte Vorschau. HTML ist auf Textformatierung begrenzt; Skripte, Events, fremde Bilder, Einbettungen und gefährliche Links werden entfernt. Auch vor öffentlicher Ausgabe wird erneut bereinigt. Bestehende Klartexte bleiben Klartexte, bis sie bewusst im neuen Editor gespeichert werden. Versionierung und Veröffentlichungsrechte bleiben erhalten. Unveröffentlichte Inhalte werden nicht als echte Rechtstexte ausgegeben.
+
+- **Teamchat:** @Atlas, @Nova, @Echo oder @alle; Namensvorschläge beim Tippen. Agentennamen mit Leerzeichen werden als @Content_Team erwähnt. Mehrdeutige Namen werden abgelehnt. Explizite Erwähnungen haben Vorrang vor der Empfängerauswahl. Bis zehn direkte Empfänger je neuer Nachricht.
+- **Dateien direkt im Chat:** Büroklammer, Drag-and-drop auf das Eingabefeld oder Auswahl aus der Bibliothek. Beim Senden werden die Anhänge dem Auftrag zugeordnet. Upload allein startet keine KI.
+- **Nur Information:** speichert Text und Anhänge ohne neuen KI-Aufruf. Wahlweise einem offenen Auftrag zuordnen. Bei laufenden Modellaufrufen kommt die Information im nächsten Schritt an. Rückfragen lassen sich über die Auftragsauswahl im Chat beantworten.
+- **Live:** Server-Sent Events für Chat, laufende Antworttexte und Arbeitsereignisse. Modell-Streaming ist pro Angebot abschaltbar. Anbieter ohne Streaming können JSON-Antworten liefern. Werkzeugargumente werden nicht als Live-Antwort ausgespielt.
+- **Dateien & Repos:** Text/Code/Markdown/CSV/JSON, textbasierte PDFs und DOCX. Keine Bildanalyse/OCR, Audio-/Videoverarbeitung oder Binärausführung. 5 MB Upload je Datei, 500 KB extrahierter Text, 100 Dateien / 20 MB Text je Workspace. PDF maximal 100 Seiten. Originale PDF-/Word-Bytes werden nach Textextraktion nicht gespeichert. Layout und Formatierungen werden nicht übernommen.
+- **GitHub:** URL https://github.com/owner/repository und optional Branch/Commit. Öffentliche Repos ohne Schlüssel; private Repos mit einem nur für den Import verwendeten Lesetoken. Maximal zwölf geeignete Textdateien / 750 KB plus Dateibaum, Commit-ID und Importvermerk. Kein vollständiger Checkout, Push oder Code-Test. Große Dateibäume werden abgelehnt; Ausschnitte sind klar gekennzeichnet.
+- **Workspaces:** eigene Agenten, Modelle, Skills, MCPs, Dateien, Aufträge und Chats. Plan und Credit-Wallet gelten gemeinsam pro Konto. Ein neuer Workspace erzeugt kein Guthaben. Bestehende Planpreise bleiben erhalten. Standardlimits: Explorer 2 / Starter 5 / Business 20 Workspaces; Admin kann diese ändern.
+- **Profil:** Name und Rechnungsangaben, Passwortänderung, Rechnungsübersicht und Export sämtlicher eigener Workspaces. Anmeldung per E-Mail bleibt unverändert, bis ein bestätigter E-Mail-Wechsel implementiert ist.
+- Unten links öffnet **Administrator** die Administration. Oben rechts öffnet Name/Avatar ein Kontomenü mit Profil, Datenschutz, Rechnungen und Abmelden. Datenschutz steht nicht zusätzlich in der Sidebar. Favicon unter /icon.svg.
+- Arbeitsbereiche haben feste URLs, etwa `/profile`, `/invoices`, `/files`, `/account/privacy` und `/tasks/<Auftrags-ID>`. Auch Admin-Unterseiten sind direkt erreichbar, etwa `/admin/payments` und `/admin/analytics`. Neuladen und Browser-Zurück/-Vorwärts erhalten die ausgewählte Seite; ein Direktaufruf ohne Sitzung zeigt die Anmeldung und öffnet danach das gewünschte Ziel. Der aktive Workspace bleibt über das notwendige Workspace-Cookie ausgewählt. Links ersetzen keine Zugriffsprüfung.
+
+## Modelle und Credits
+
+Bis 30 eigene Modellkonfigurationen je Workspace sowie ein separater Betreiber-Katalog. Anbieter, API-Basisadresse und Modell-ID werden pro Angebot hinterlegt. Der Nutzer wählt Workspace-Standard und optional ein Modell pro Agent. Betreiberangebote erfordern einen aktiv freigeschalteten Plan. Eigene Schlüssel verursachen keine Plattform-KI-Credits.
+
+Credits je Aufruf = aufgerundete Summe aus Eingabe-Tokens × Eingabe-Tarif / 1.000 + Ausgabe-Tokens × Ausgabe-Tarif / 1.000 + Grundpreis. Beispiel: 1.000 Eingabe- und 100 Ausgabe-Tokens bei Tarifen 2 / 8 und Grundpreis 3 ergeben 6 Credits. Das ist eine konfigurierbare Recheneinheit, kein Eurobetrag.
+
+Vor dem Aufruf wird ein konservativer Höchstbetrag reserviert. Tatsächliche Nutzung wird anschließend mit dem zum Aufruf gespeicherten Tarif abgerechnet; der Rest wird zurückgebucht. Fehlt die Token-Aufschlüsselung, gilt für die gemeldete Gesamtzahl der höhere Token-Tarif. Fehlt jede Nutzungsangabe oder bleibt ein Aufruf unklar, kann die Reservierung belastet bleiben. Bei Serverabstürzen müssen offene Reservierungen geprüft werden. Die Buchung verhindert Überziehung auch über mehrere Workspaces hinweg.
+
+Bestehende Betreiberzugänge werden mit 1.000 Credits / 1.000 Tokens migriert, sodass bisherige Guthaben nicht still anders bewertet werden. Bestehende Schlüssel und Pläne bleiben erhalten.
+
+## Stripe und Rechnungen
+
+Für die lokale Betreiberumgebung sind Deutschland und die bestätigte Kleinunternehmerregelung nach [§ 19 UStG](https://www.gesetze-im-internet.de/ustg_1980/__19.html) hinterlegt. Die Auswahl ist im Adminpanel später änderbar. Sie dokumentiert die Grundlage; die Steuerkonfiguration und Rechnungstexte im tatsächlichen Rechnungsdienst müssen dazu passend eingerichtet werden. Bereits ausgestellte externe Rechnungen werden durch diese lokale Auswahl nicht umgeschrieben.
+
+Stripe-SDK, Checkout, Portal, Signaturprüfung, Webhook-Deduplizierung, Rechnungsübersicht und einmalige periodische Credit-Gutschrift je bezahlter Abonnementrechnung sind implementiert. Standard: deaktiviert. Keine echte Zahlung wurde zum Testen ausgelöst. Preis-IDs müssen eindeutigen Plänen zugewiesen sein. Promotions sind weiterhin Banner/Verwaltungsdaten und werden noch nicht an Stripe-Rabatte gekoppelt.
+
+Vor Aktivierung: passender Test- oder Live-Schlüssel und Webhook-Secret, veröffentlichte Rechtstexte, Anbieter-Firmendaten und Rechnungsnummerierung in Stripe, Checkout-AGB-Link, Portal und Steuerbehandlung einrichten. Rückkehr-URL darf keine fremden Redirect-Parameter enthalten; Live-Betrieb braucht HTTPS. Webhook: `/api/billing/webhook`; `invoice.paid`, `invoice.finalized`, `invoice.payment_failed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`. Lokal Stripe CLI mit Testmodus nutzen. Ein echter Stripe-Testcheckout samt Verlängerung, Kündigung, Zahlungsfehler, Erstattung und Streitfall bleibt vor Freigabe erforderlich. Abonnements anderer Produkte/mehrere Abonnements pro Konto und Prorationsgutschriften sind nicht automatisch unterstützt.
+
+**ZUGFeRD-Erzeugung ist noch nicht implementiert.** Stripe-PDFs werden ausdrücklich nicht als E-Rechnung ausgewiesen. Für die Anbindung fehlen ein ausgewählter Rechnungsdienst, vollständige Verkäufer-/Steuerangaben und eine geprüfte Format-/Archivierungskette. Normales PDF plus beliebiges XML erfüllt die ZUGFeRD-Anforderungen nicht. Ein vorhandenes Stripe-Abonnement muss vor lokaler Kontolöschung beendet werden. Gesetzlich erforderliche Rechnungsaufbewahrung im Rechnungsdienst und das betriebliche Löschkonzept müssen vor öffentlichem Betrieb festgelegt werden.
+
+Quellen: [Stripe-Abonnement-Webhooks](https://docs.stripe.com/billing/subscriptions/webhooks), [Stripe Checkout](https://docs.stripe.com/api/checkout/sessions/create), [FeRD ZUGFeRD-FAQ](https://www.ferd-net.de/standards/zugferd-faq).
+
+## Rechtstexte und Analyse
+
+Admin verwaltet versionierte Seiten für Impressum, Datenschutz, AGB und Cookies mit Richtext-/HTML-Editor, bereinigter Vorschau und Veröffentlichung. Alte Klartexte werden weiter unterstützt. Öffentliche Links sind ohne Login erreichbar. Es wurden keine Firmendaten oder angeblich geprüften Standardtexte erfunden.
+
+Analyse ist zunächst deaktiviert und benötigt eine ausdrückliche optionale Einwilligung im Browser. Gespeichert werden freigegebene Seiten-/Klick-Kennungen, Zeitpunkt, nur der Hostname des Referrers, eine Bot-Heuristik und bei angemeldeten einwilligenden Nutzern die Konto-ID. Keine IP-Adressen oder vollständigen User-Agents werden in dieser Analyse gespeichert. Keine Freitexte/Formularinhalte werden für Klickauswertungen erfasst. Zeitraum und Gruppierung Tag/Woche/Monat/Jahr sind auswählbar, einschließlich Registrierungen, aktiver Konten mit Einwilligung, Seiten, Klickzielen und Referrern. Anonyme Aufrufe sind keine eindeutigen Besucher; Bots werden nur anhand des User-Agents vermutet, nicht zuverlässig identifiziert. Ablehnung beendet künftige Analyse. Das ist kein Bot-Schutz oder vollständiges Traffic-Monitoring.
+
+Aufbewahrungsbereinigung läuft in der gestarteten App höchstens stündlich über den Healthcheck und zusätzlich beim Speichern der Workspace-Aufbewahrung. Offene Aufträge und von ihnen benötigte Dateien werden geschützt. Analyse-Rohdaten folgen ihrer eigenen Admin-Frist; Live-Textfragmente werden nach zehn Minuten bereinigt. Backups und externe Dienste benötigen eigene Löschprozesse.
+
+Technische Funktionen sind kein Nachweis pauschaler DSGVO-Konformität. Verantwortlichkeit, Rechtsgrundlagen, Einwilligungstexte, AV-Verträge, Anbieter-/Drittlandtransfers, Betroffenenrechte, Sicherheitsbetrieb, Rechnungsaufbewahrung und tatsächliche Serverlogs müssen zum konkreten öffentlichen Betrieb passen.
+
+## Preishypothesen zur späteren Entscheidung
+
+Die bestehenden Testpreise wurden nicht geändert. Für ein späteres Angebot wären beispielsweise BYOK 19–29 €/Monat, verwaltete KI 49–79 €/Monat und größere Teams ab 149 €/Monat **zu prüfende Hypothesen**, keine belegte Kalkulation. Ein niedriger Grundpreis funktioniert nur mit klaren Limits, separatem Modellverbrauch und begrenzten Betriebs-/Supportkosten. Alle Beträge und Brutto-/Netto-Darstellung müssen vor Verkauf festgelegt werden. Vor allem Code-Sandboxes, Telefonie und Werbung brauchen separate Kostenbudgets; „unbegrenzt autonom“ eignet sich nicht als anfängliches Inklusivversprechen.
+
+Nächste sinnvolle Produktfunktionen: Geld-/Schrittbudgets und Freigaben pro Auftrag, Rollen und Einladungen in Workspaces, dokumentierte dauerhafte Wissensbasis, Agenten-Ergebnisse mit Quellen, vollständige Git-Checkouts in isolierten Sandboxes und providerbezogene Modellfreigaben je Plan. Vor vielen gleichzeitigen Nutzern die aktuellen Datenbank-Polls im Live-Feed durch eine gemeinsame Ereignisverteilung ersetzen.

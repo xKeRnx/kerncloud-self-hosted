@@ -1,0 +1,11 @@
+# Budget decisions and suggested replies
+
+Budget stops now have explicit actions: increase this run's numeric limits, pause, or stop while preserving results. Text messages and ordinary answers cannot requeue a known run/project budget stop. This also applies to legacy pending review records. No language model is used to interpret or apply a budget change.
+
+Only owners/admins may raise limits. The form previews old/new total tokens and credits and requires a separate confirmation. Custom text such as “100 Mio. Tokens” can prefill a numeric preview, but only the confirmed numeric payload is authoritative. The maximum manual existing-run override is 100,000,000 tokens. Workspace defaults, future tasks, account credit balance, project budget, provider context/output constraints, call counts and tool permissions are not expanded. Project quota constrains the new cap; it must be edited separately if insufficient. BYOK remains provider-billed.
+
+The response transaction locks run, task, decision and project in the existing worker lock order. Expected current limits prevent stale form submissions; a persisted request hash makes identical submissions idempotent. Paused runs remain paused after a budget increase. Pause/cancel reuse the existing lease-fenced run-control function. Answered budget tasks no longer remain input-required, preventing inbox recreation. The migration changes the maximum allowed run token limit without changing any existing value.
+
+Agents may provide up to three plain-text `options` with `request_input`. Options are saved on the decision and shown with a custom-answer option. Legacy questions receive three generic suggestions. Selecting a suggestion only constructs a text reply. Exact tool approval, permission checks and external-cost confirmation remain separate.
+
+Validation covers legacy text/chat retry prevention, explicit 100-million limits, expected-limit conflicts, concurrent duplicate submissions, workspace/project scope, owner/admin restrictions, project quotas, unchanged account/default limits, retained files, lease fencing, option persistence/custom replies and migration limits. All provider-facing verification uses isolated protocol fixtures.

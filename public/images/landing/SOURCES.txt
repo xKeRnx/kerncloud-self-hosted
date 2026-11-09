@@ -1,0 +1,17 @@
+KeRnCloud landing concept assets, retrieved 2026-10-27.
+
+Photos: Unsplash standard license, https://unsplash.com/license
+Downloaded from the original Unsplash image CDN, resized by its image service.
+These are illustrative stock photos, not employees, customers or endorsements.
+team.jpg: https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1440&q=85&fit=crop&auto=format
+collaboration.jpg: https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&q=85&fit=crop&auto=format
+workspace.jpg: https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=1440&q=85&fit=crop&auto=format
+
+Manrope variable font, SIL Open Font License 1.1:
+https://github.com/google/fonts/tree/main/ofl/manrope
+https://raw.githubusercontent.com/google/fonts/main/ofl/manrope/Manrope%5Bwght%5D.ttf
+See OFL-Manrope.txt for the complete copyright notice and license.
+
+All image and font files are served locally. The landing pages do not make
+requests to Unsplash or Google Fonts at runtime. Product demos are original,
+code-native illustrations and do not trigger AI calls.

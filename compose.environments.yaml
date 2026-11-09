@@ -1,0 +1,11 @@
+services:
+  browser-image:
+    image: kerncloud-browser:0.4
+    build:
+      context: .
+      dockerfile: environments/browser/Dockerfile
+  development-image:
+    image: kerncloud-development:0.4
+    build:
+      context: .
+      dockerfile: environments/development/Dockerfile

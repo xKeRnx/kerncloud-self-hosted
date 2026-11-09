@@ -1,0 +1,305 @@
+.project-context {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 0 0 28px;
+  padding: 16px 20px;
+  border: 1px solid var(--border, var(--ui-accent-line, #2b3848));
+  border-radius: 12px;
+  background: var(--panel, var(--ui-surface, #121c26));
+}
+.project-context label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+.project-context select {
+  min-width: 220px;
+  max-width: 100%;
+}
+.project-context > span {
+  font-size: var(--ui-font-12, 12px);
+  color: var(--muted, var(--ui-muted, #8ca0b8));
+}
+.organisation-suite {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.organisation-suite h1 {
+  margin: 0 0 12px;
+}
+.organisation-suite h2 {
+  margin: 0 0 16px;
+}
+.organisation-suite h3 {
+  margin: 0 0 10px;
+}
+.organisation-suite .panel {
+  margin: 0;
+}
+.organisation-suite .settings-panel {
+  display: grid;
+  gap: 18px;
+}
+.organisation-suite .section-title {
+  gap: 20px;
+  align-items: flex-start;
+}
+.organisation-suite .section-title p {
+  margin: 0;
+}
+.organisation-suite p {
+  line-height: 1.65;
+}
+.organisation-suite dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.organisation-suite dl > div {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+.organisation-suite dt {
+  color: var(--muted, var(--ui-muted, #8ca0b8));
+  font-size: var(--ui-font-12, 12px);
+}
+.organisation-suite dd {
+  margin: 0;
+  text-align: right;
+  font-size: var(--ui-font-13, 13px);
+}
+.organisation-suite fieldset {
+  padding: 16px;
+  border: 1px solid var(--border, var(--ui-accent-line, #2b3848));
+  border-radius: 10px;
+  min-width: 0;
+}
+.organisation-suite legend {
+  padding: 0 8px;
+  font-size: var(--ui-font-13, 13px);
+}
+.organisation-suite small {
+  display: block;
+  color: var(--muted, var(--ui-muted, #8ca0b8));
+  margin-top: 7px;
+  line-height: 1.5;
+}
+.organisation-suite td {
+  vertical-align: top;
+}
+.organisation-suite td select {
+  min-width: 160px;
+}
+.organisation-suite td input[type="number"] {
+  min-width: 120px;
+}
+.organisation-suite details > summary {
+  cursor: pointer;
+  padding: 4px 0;
+  font-weight: 600;
+}
+.organisation-suite details[open] > summary {
+  margin-bottom: 20px;
+}
+.organisation-suite .check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+}
+.organisation-suite .form-note {
+  margin: 0;
+}
+.organisation-suite textarea {
+  max-width: 100%;
+}
+.organisation-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 4px 0;
+}
+.organisation-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+}
+.organisation-choices label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+}
+.organisation-project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 20px;
+}
+.project-tile {
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  min-width: 0;
+}
+.project-tile.selected {
+  border-color: var(--accent, var(--ui-accent-line, #78d2e3));
+}
+.project-tile p {
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.organisation-materials {
+  display: grid;
+  gap: 12px;
+}
+.organisation-materials > label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border, var(--ui-accent-line, #2b3848));
+}
+.org-chart {
+  overflow: auto;
+  padding: 18px 4px;
+}
+.org-chart ul {
+  display: flex;
+  gap: 24px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  justify-content: center;
+}
+.org-chart ul ul {
+  margin-top: 28px;
+  border-top: 1px solid var(--border, var(--ui-accent-line, #2b3848));
+  padding-top: 24px;
+}
+.org-chart li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  min-width: 200px;
+}
+.org-chart li li:before {
+  position: absolute;
+  content: "";
+  top: -24px;
+  height: 24px;
+  border-left: 1px solid var(--border, var(--ui-accent-line, #2b3848));
+}
+.org-agent {
+  border: 1px solid var(--border, var(--ui-accent-line, #2b3848));
+  border-radius: 12px;
+  min-width: 200px;
+  max-width: 260px;
+  padding: 18px;
+  background: var(--panel, var(--ui-surface, #121c26));
+  display: grid;
+  gap: 6px;
+}
+.org-agent strong {
+  font-size: var(--ui-font-15, 15px);
+}
+.org-agent > span {
+  font-size: var(--ui-font-13, 13px);
+}
+.org-agent small {
+  margin: 0;
+  font-size: var(--ui-font-11, 11px);
+}
+.work-timeline {
+  display: grid;
+  gap: 8px;
+  min-width: 480px;
+}
+.work-timeline-row {
+  display: grid;
+  grid-template-columns: 160px minmax(260px, 1fr);
+  align-items: center;
+  gap: 18px;
+  min-height: 38px;
+}
+.work-timeline-row > strong {
+  font-size: var(--ui-font-13, 13px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-timeline-track {
+  height: 32px;
+  position: relative;
+  border-radius: 5px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ui-subtle, #182331) 0,
+    var(--ui-subtle, #182331) calc(14.285% - 1px),
+    var(--ui-accent-soft, #344153) calc(14.285% - 1px),
+    var(--ui-accent-soft, #344153) 14.285%
+  );
+  overflow: hidden;
+}
+.work-timeline-bar {
+  position: absolute;
+  top: 6px;
+  height: 20px;
+  background: var(--ui-accent-soft, #78d2e3);
+  border-radius: 4px;
+  min-width: 4px;
+}
+.work-timeline-bar.failed {
+  background: var(--ui-danger-soft, #d77983);
+}
+.work-timeline-bar.canceled {
+  background: var(--ui-accent-soft, #8291a1);
+}
+.work-timeline-bar.running {
+  background: var(--ui-success-soft, #6ed7a5);
+}
+.work-timeline-bar.planned {
+  background: var(--ui-purple-soft, #b39aea);
+}
+.organisation-suite .settings-panel:has(.work-timeline) {
+  overflow: auto;
+}
+@media (max-width: 700px) {
+  .project-context {
+    align-items: stretch;
+    gap: 12px;
+  }
+  .project-context label {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+  .project-context select {
+    min-width: 0;
+    width: 100%;
+  }
+  .organisation-suite .section-title {
+    flex-direction: column;
+  }
+  .organisation-suite .organisation-actions button,
+  .organisation-suite .organisation-actions .button {
+    max-width: 100%;
+  }
+  .organisation-suite .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .project-tile {
+    padding: 20px;
+  }
+  .work-timeline-row {
+    grid-template-columns: 120px minmax(260px, 1fr);
+  }
+}

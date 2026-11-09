@@ -1,0 +1,4 @@
+KeRnCloud UI-Prüfung – künstliche Testdatei
+Zielgruppe: Support-Teams.
+Aufgabe: Ausgangsmaterial im Chat bereitstellen.
+Diese Datei enthält keine echten Kundendaten und keinen API-Schlüssel.

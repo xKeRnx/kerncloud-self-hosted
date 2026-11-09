@@ -1,0 +1,226 @@
+name: ${KERNCLOUD_COMPOSE_PROJECT:?Run local init first}
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: kerncloud
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run npm run setup first}
+      POSTGRES_DB: ${KERNCLOUD_DB_NAME:-kerncloud}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kerncloud -d ${KERNCLOUD_DB_NAME:-kerncloud}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  app:
+    build: .
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    tmpfs: ["/tmp:size=256m,mode=1777"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://kerncloud:${POSTGRES_PASSWORD}@postgres:5432/${KERNCLOUD_DB_NAME:-kerncloud}
+      ARTIFACT_VALIDATOR_URL: http://artifact-validator:3210
+      OBJECT_STORAGE_URL: http://object-storage:3220
+      OBJECT_STORAGE_TOKEN: ${WORKER_TOKEN}
+      MAINTENANCE_MODE: external
+      DB_POOL_MAX: 12
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    networks: [default, validation]
+    ports:
+      - "${KERNCLOUD_BIND_ADDRESS:-127.0.0.1}:${KERNCLOUD_PORT:-3100}:3100"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3100/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  worker:
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    command: ["npm", "run", "worker"]
+    environment:
+      PLATFORM_URL: http://app:3100
+      WORKER_TOKEN: ${WORKER_TOKEN:?Run npm run setup first}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+      WORKER_MAINTENANCE: "false"
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+  integration:
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    profiles: [test]
+    command: ["npm", "run", "test:integration"]
+    env_file: .env
+    environment:
+      DEPLOYMENT_MODE: saas
+      ALLOW_REGISTRATION: "true"
+      PUBLIC_URL: http://localhost:3100
+      PUBLIC_ENVIRONMENT_URL: http://localhost:3200
+      DATABASE_URL: postgresql://kerncloud:${POSTGRES_PASSWORD}@postgres:5432/${KERNCLOUD_DB_NAME:-kerncloud}
+      TEST_DATABASE_URL: postgresql://kerncloud:${POSTGRES_PASSWORD}@postgres:5432/${KERNCLOUD_DB_NAME:-kerncloud}_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+  infrastructure:
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    profiles: [infrastructure]
+    user: "0:0"
+    command: ["npm", "run", "infrastructure"]
+    env_file: .env.infrastructure
+    environment:
+      PLATFORM_URL: http://app:3100
+      DOCKER_PROJECT: ${KERNCLOUD_COMPOSE_PROJECT}
+      INFRA_RELAY_URL: ws://gateway:3200/_relay
+      INFRA_RELAY_NETWORK: ${KERNCLOUD_COMPOSE_PROJECT}_default
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+  gateway:
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    command: ["node", "--import", "tsx", "src/gateway/server.ts"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://kerncloud:${POSTGRES_PASSWORD}@postgres:5432/${KERNCLOUD_DB_NAME:-kerncloud}
+      GATEWAY_ADVERTISE_URL: http://gateway:3200
+      GATEWAY_ID: local-gateway
+      DB_POOL_MAX: 6
+    ports: ["${KERNCLOUD_BIND_ADDRESS:-127.0.0.1}:${KERNCLOUD_GATEWAY_PORT:-3200}:3200"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3200/_health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+  autoscaler:
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    profiles: [autoscale]
+    user: "0:0"
+    command: [node, --import, tsx, src/autoscaler.ts]
+    environment:
+      PLATFORM_URL: http://app:3100
+      WORKER_TOKEN: ${WORKER_TOKEN}
+      AUTOSCALER_ID: local
+      AUTOSCALE_MIN: "0"
+      AUTOSCALE_MAX: "4"
+      AUTOSCALE_NETWORK: ${KERNCLOUD_COMPOSE_PROJECT}_default
+      AUTOSCALE_WORKER_IMAGE: kerncloud-selfhost:0.38.0
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    depends_on:
+      app:
+        condition: service_healthy
+    restart: unless-stopped
+  scheduler:
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    command: ["node", "--import", "tsx", "src/scheduler.ts"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://kerncloud:${POSTGRES_PASSWORD}@postgres:5432/${KERNCLOUD_DB_NAME:-kerncloud}
+      OBJECT_STORAGE_URL: http://object-storage:3220
+      OBJECT_STORAGE_TOKEN: ${WORKER_TOKEN}
+      ARTIFACT_VALIDATOR_URL: http://artifact-validator:3210
+      DB_POOL_MAX: 4
+      SERVICE_NAME: kerncloud-scheduler
+    depends_on:
+      app:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [default, validation]
+  object-storage:
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    command: ["node", "--import", "tsx", "src/storage/server.ts"]
+    environment:
+      OBJECT_STORAGE_ROOT: /data
+      OBJECT_STORAGE_TOKEN: ${WORKER_TOKEN}
+    volumes: ["object_data:/data"]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3220/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+  artifact-validator:
+    build:
+      context: .
+      dockerfile: environments/validator.Dockerfile
+    image: kerncloud-selfhost-validator:0.38.0
+    environment:
+      VALIDATOR_TOKEN: ${WORKER_TOKEN:?Run npm run setup first}
+    networks: [validation]
+    read_only: true
+    tmpfs: ["/tmp:size=192m,mode=1777"]
+    shm_size: 128m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:3210/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+networks:
+  validation:
+    internal: true
+volumes:
+  postgres_data:
+  object_data:

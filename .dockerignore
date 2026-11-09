@@ -1,0 +1,47 @@
+node_modules
+.next
+.env
+.env.*
+.git
+backups
+test-results
+.npm-cache
+*.log
+*.patch
+originals
+.invoice-qa
+output
+Dockerfile.invoice-tools-dev
+compose.einvoice-test.yaml
+
+.node_modules-copy-retained
+compose.usage-test.yaml
+compose.monthly-test.yaml
+compose.agent-runtime-test.yaml
+
+bridge-app/node_modules
+bridge-app/dist
+bridge-app/dist-final
+
+bridge-app/dist-installers
+bridge-app/dist-macos
+
+# Never send local signing credentials to an application build context
+bridge-app/.signing
+bridge-app/dist-signing
+**/*.pfx
+**/*.p12
+**/*.p8
+**/*.key
+**/*.pem
+
+# Local update release authority must never enter a Docker context
+.bridge-update-keys
+
+# Desktop is a separate build, never a backend dependency
+desktop-app
+.github
+.release
+dist
+
+.local-networks.yaml

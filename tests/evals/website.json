@@ -1,0 +1,13 @@
+{
+  "name": "Neko Licht: fixed independent acceptance criteria",
+  "maxTokens": 10000,
+  "files": ["index.html", "README.md"],
+  "widths": [1440, 390],
+  "assertions": [
+    { "action": "click", "selector": "#q" },
+    { "action": "press", "selector": "#q", "value": "Enter" },
+    { "action": "assert_attribute", "selector": "#q", "value": "true" },
+    { "action": "click", "selector": "#d" },
+    { "action": "assert_text", "selector": "#m", "value": "Demo bereit" }
+  ]
+}

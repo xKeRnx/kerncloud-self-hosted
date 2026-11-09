@@ -1,0 +1,73 @@
+name: Desktop packages
+on:
+  workflow_dispatch:
+    inputs:
+      signed:
+        description: 'Require signing credentials (Windows/macOS)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  packages:
+    environment: desktop-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+            arch: x64
+          - os: ubuntu-latest
+            target: linux
+            arch: x64
+          - os: ubuntu-24.04-arm
+            target: linux
+            arch: arm64
+          - os: macos-15
+            target: mac
+            arch: arm64
+          - os: macos-15-intel
+            target: mac
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: desktop-app/package-lock.json
+      - run: node scripts/release-check.mjs
+      - run: node scripts/desktop-payload.mjs
+      - run: npm ci
+        working-directory: desktop-app
+      - run: npm test
+        working-directory: desktop-app
+      - name: Build packages
+        working-directory: desktop-app
+        run: node scripts/build.cjs ${{ matrix.target }} ${{ matrix.arch }}
+        env:
+          KERNCLOUD_REQUIRE_SIGNING: ${{ inputs.signed }}
+          CSC_LINK: ${{ matrix.target == 'win' && secrets.WIN_CSC_LINK || secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ matrix.target == 'win' && secrets.WIN_CSC_KEY_PASSWORD || secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.target }}-${{ matrix.arch }}
+          path: |
+            desktop-app/dist/*.exe
+            desktop-app/dist/*.dmg
+            desktop-app/dist/*.zip
+            desktop-app/dist/*.AppImage
+            desktop-app/dist/*.deb
+          if-no-files-found: error
+      - name: Package corresponding source
+        shell: bash
+        run: git archive --format=zip --output=kerncloud-source.zip HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: corresponding-source-${{ matrix.target }}-${{ matrix.arch }}
+          path: kerncloud-source.zip

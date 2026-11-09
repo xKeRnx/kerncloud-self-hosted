@@ -1,0 +1,91 @@
+.memory-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 22px 0;
+}
+.memory-search {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  background: var(--ui-surface, #0e1c27);
+  border: 1px solid var(--ui-accent-line, #293e4d);
+  border-radius: 8px;
+}
+.memory-search input {
+  border: 0;
+  background: transparent;
+  box-shadow: none !important;
+}
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: 18px;
+  margin: 18px 0;
+}
+.memory-card {
+  padding: 22px;
+  margin: 0 !important;
+  min-width: 0;
+}
+.memory-card h3 {
+  margin: 16px 0 10px;
+  font-size: 17px;
+  overflow-wrap: anywhere;
+}
+.memory-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: var(--ui-muted, #90a9b8);
+  font-size: var(--ui-font-10, 10px);
+}
+.memory-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.memory-meta code {
+  overflow-wrap: anywhere;
+}
+.memory-copy {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: var(--ui-font-12, 12px);
+  line-height: 1.8;
+  max-height: 300px;
+  overflow: auto;
+  margin: 18px 0;
+}
+.memory-evidence {
+  padding: 11px;
+  background: var(--ui-subtle, #102c29);
+  border-radius: 7px;
+  color: var(--ui-ink, #9cd5c7);
+  font-size: var(--ui-font-11, 11px);
+  overflow-wrap: anywhere;
+}
+.memory-evidence p {
+  margin: 6px 0 0;
+  font-size: var(--ui-font-11, 11px);
+  white-space: pre-wrap;
+}
+.memory-card > small {
+  display: block;
+  margin-top: 14px;
+  font-size: var(--ui-font-10, 10px);
+  line-height: 1.7;
+}
+.memory-card .button-row {
+  margin-bottom: 0;
+}
+.memory-retention {
+  font-size: var(--ui-font-11, 11px);
+  line-height: 1.8;
+  margin: 25px 0;
+}

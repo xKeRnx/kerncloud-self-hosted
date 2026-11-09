@@ -1,0 +1,122 @@
+.project-manager {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.project-manager-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.project-manager-summary > .panel {
+  padding: 20px;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.project-manager-summary span {
+  font-size: var(--ui-font-12, 12px);
+  color: var(--muted);
+}
+.project-manager-summary strong {
+  font-size: 28px;
+}
+.project-manager-filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 20px;
+  padding: 20px;
+}
+.project-manager-filters .field {
+  margin: 0;
+}
+.project-manager-filters .field > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.project-manager-hint {
+  color: var(--muted);
+  font-size: var(--ui-font-12, 12px);
+  margin: 0;
+}
+.project-manager-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 20px;
+}
+.project-management-card {
+  padding: 24px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin: 0;
+}
+.project-management-card.selected {
+  border-color: var(--accent);
+}
+.project-management-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.project-management-card-top > svg {
+  color: var(--accent);
+  margin-right: auto;
+}
+.project-management-card h2 {
+  overflow-wrap: anywhere;
+  margin: 0 !important;
+}
+.project-description {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+.project-selection-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--ui-font-11, 11px);
+  color: var(--accent);
+}
+.project-management-card dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.project-management-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.project-management-card dt {
+  color: var(--muted);
+  font-size: var(--ui-font-11, 11px);
+}
+.project-management-card dd {
+  margin: 0 !important;
+  font-size: var(--ui-font-12, 12px);
+}
+.project-management-card > .organisation-actions {
+  margin-top: auto;
+  padding-top: 8px;
+}
+.project-manager-empty {
+  padding: 24px;
+}
+.environment-project-scope {
+  max-width: 900px;
+  line-height: 1.7 !important;
+}
+@media (max-width: 700px) {
+  .project-manager-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .project-manager-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

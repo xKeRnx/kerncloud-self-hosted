@@ -1,0 +1,1 @@
+KeRnCloud actual UI snapshots captured from kerncloud_horizon_showcase_20261027_test on 2026-10-27. Neutral example data only. Sanitized, non-interactive HTML/CSS inside SVG; no scripts, links, form actions, credentials, customer data or remote resources. Manrope font: SIL Open Font License, see /images/landing/OFL-Manrope.txt. SVG remains vector at any display density.

@@ -1,0 +1,31 @@
+{
+  "name": "kerncloud-bridge",
+  "version": "0.1.5",
+  "private": true,
+  "description": "KeRnCloud Bridge: locally enforced customer device access",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.cjs",
+    "package": "node scripts/package.cjs",
+    "build:installers": "node scripts/build-installers.cjs",
+    "build:macos": "sh scripts/build-macos.sh",
+    "signing:check": "node scripts/signing/check.cjs",
+    "release:windows": "node scripts/build-windows.cjs",
+    "release:macos": "node scripts/build-macos.cjs",
+    "release:linux": "node scripts/build-linux-repository.cjs"
+  },
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "45.0.0"
+  },
+  "author": {
+    "name": "KeRn-WS",
+    "email": "support@kern-ws.com",
+    "url": "https://kern-ws.com"
+  },
+  "homepage": "https://kern-ws.com",
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  }
+}

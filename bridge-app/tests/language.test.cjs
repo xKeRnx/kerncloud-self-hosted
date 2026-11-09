@@ -1,0 +1,8 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
+function page(saved){const heading={nodeValue:'Connect device',parentElement:{tagName:'H2'}},select={value:''},storage=new Map(saved?[['kerncloud-bridge-language',saved]]:[]),window={};let visited=false;
+ const document={body:{},documentElement:{},createTreeWalker:()=>({nextNode(){if(visited)return null;visited=true;return heading;}}),querySelectorAll:()=>[],getElementById:()=>select};
+ vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../i18n.js'),'utf8'),{window,document,NodeFilter:{SHOW_TEXT:4},localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)}});
+ return {window,document,heading,select,storage};}
+test('Bridge starts in English and translates only application-owned text',()=>{const p=page();assert.equal(p.document.documentElement.lang,'en');assert.equal(p.heading.nodeValue,'Connect device');assert.equal(p.window.bridgeLanguage.text('Nicht verbunden'),'Not connected');assert.equal(p.window.bridgeLanguage.text('Customer file: Mein Projekt'),'Customer file: Mein Projekt');});
+test('Explicit German choice is persisted and can be changed back without touching device permissions',()=>{const p=page();p.window.bridgeLanguage.set('de');assert.equal(p.heading.nodeValue,'Gerät verbinden');assert.equal(p.storage.get('kerncloud-bridge-language'),'de');const reload=page(p.storage.get('kerncloud-bridge-language'));assert.equal(reload.document.documentElement.lang,'de');reload.window.bridgeLanguage.set('en');assert.equal(reload.heading.nodeValue,'Connect device');assert.equal(reload.storage.size,1);});

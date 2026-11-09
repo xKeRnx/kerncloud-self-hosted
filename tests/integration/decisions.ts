@@ -1,0 +1,101 @@
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {createDecision,decisionConsent,listDecisions} from '../../src/server/decisions.ts';
+import {transaction} from '../../src/server/db.ts';
+import {encrypt} from '../../src/server/security.ts';
+import {toolStep} from '../../src/server/engine.ts';
+
+export async function decisionTests(t:any,{request,pool,fixtureUrl,alice,echoCount}:any) {
+ const user=await request('auth/signup',{name:'Inbox fixture',email:'inbox@test.local',password:'inbox-fixture-password',privacyAccepted:true});assert.equal(user.status,200);
+ const state=(await request('state',undefined,user.cookie)).data,ws=state.workspace.id,agent=state.agents[0].id;
+ const actor=state.user.id,conn=randomUUID(),mapping={mcp_inbox_echo:{connectionId:conn,toolName:'fixture_echo'}};
+ await pool.query("INSERT INTO connections(id,workspace_id,name,url,secret,allowed_tools,enabled) VALUES($1,$2,'Inbox fixture',$3,$4,'[\"fixture_echo\"]',true)",[conn,ws,fixtureUrl+'/mcp',encrypt('fixture-only')]);
+ await pool.query('UPDATE agents SET mcp_ids=$2 WHERE id=$1',[agent,JSON.stringify([conn])]);
+ const fixture=async(kind='information',extra:any={})=>{
+   const run=randomUUID(),id=randomUUID();
+   await pool.query("INSERT INTO runs(id,workspace_id,goal,status,max_steps) VALUES($1,$2,'Inbox protocol fixture','paused',20)",[run,ws]);
+   await pool.query("INSERT INTO tasks(id,run_id,workspace_id,agent_id,title,instructions,status,error) VALUES($1,$2,$3,$4,'Inbox fixture','Fixture','input_required','Welche Farbe?')",[id,run,ws,agent]);
+   const task={id,run_id:run,workspace_id:ws,agent_id:agent};
+   const decision=await transaction(c=>createDecision(c,task,{question:'Welche Farbe?',kind,...extra},randomUUID(),mapping));
+   return {run,task,decision};
+ };
+ await t.test('Entscheidungs-Postfach: Mandantentrennung, gezielte Antwort und idempotente Entscheidung',async()=>{
+   const f=await fixture();const sibling=randomUUID();
+   await pool.query("INSERT INTO tasks(id,run_id,workspace_id,agent_id,title,instructions,status) VALUES($1,$2,$3,$4,'Sibling','Fixture','input_required')",[sibling,f.run,ws,agent]);
+   assert.ok(!(await request('decisions',undefined,alice.cookie)).data.items.some((d:any)=>d.id===f.decision));
+   assert.equal((await request('decisions/respond',{id:f.decision,choice:'answer',message:'Dunkelblau'},alice.cookie)).status,404);
+   assert.equal((await request('decisions/respond',{id:f.decision,choice:'answer',message:''},user.cookie)).status,400);
+   const answers=await Promise.all([request('decisions/respond',{id:f.decision,choice:'answer',message:'Dunkelblau'},user.cookie),request('decisions/respond',{id:f.decision,choice:'answer',message:'Dunkelblau'},user.cookie)]);
+   assert.deepEqual(answers.map(x=>x.status),[200,200]);
+   const row=(await pool.query('SELECT * FROM tasks WHERE id=$1',[f.task.id])).rows[0];assert.equal(row.status,'queued');assert.equal(row.messages.filter((m:any)=>m.content.includes('Dunkelblau')).length,1);
+   assert.equal((await pool.query('SELECT status FROM tasks WHERE id=$1',[sibling])).rows[0].status,'input_required');
+   assert.equal((await pool.query('SELECT status FROM runs WHERE id=$1',[f.run])).rows[0].status,'paused');
+   assert.equal((await request('decisions/respond',{id:f.decision,choice:'deny'},user.cookie)).status,409);
+ });
+ await t.test('Einmalige MCP-Freigabe: Parameterbindung, kein Chat-Bypass und kein Doppelaufruf',async()=>{
+   const proposal={tool:'mcp_inbox_echo',args:{text:'approved fixture'}};
+   const f=await fixture('approval',{action:'Fixture echo senden',recipient:'Lokaler Testserver',proposal});
+   const view=(await request('decisions',undefined,user.cookie)).data.items.find((d:any)=>d.id===f.decision);assert.deepEqual(view.proposal,proposal);assert.ok(!('proposal_cipher'in view));
+   assert.equal((await request(`runs/${f.run}/message`,{message:'Mach einfach'},user.cookie)).status,200);
+   assert.equal((await pool.query('SELECT status FROM tasks WHERE id=$1',[f.task.id])).rows[0].status,'input_required');
+   assert.equal((await request('decisions/respond',{id:f.decision,choice:'approve'},user.cookie)).status,400);
+   assert.equal((await request('decisions/respond',{id:f.decision,choice:'approve',accept_unknown_cost:true},user.cookie)).status,200);
+   await assert.rejects(()=>transaction(c=>decisionConsent(c,f.task,proposal.tool,{text:'changed'},'changed',mapping)));
+   const lease=randomUUID();
+   await transaction(async c=>{await c.query("UPDATE runs SET status='running' WHERE id=$1",[f.run]);await c.query("UPDATE tasks SET status='running',lease_token=$2,lease_until=now()+interval '90 seconds' WHERE id=$1",[f.task.id,lease]);});
+   const priorEchoCount=echoCount();
+   const out=await toolStep(f.task.id,lease,'one',proposal.tool,proposal.args,[],mapping);assert.ok(out.result.includes('approved fixture'));
+   const repeat=await toolStep(f.task.id,lease,'one',proposal.tool,proposal.args,[],mapping);assert.deepEqual(repeat,out);
+   await assert.rejects(()=>toolStep(f.task.id,lease,'two',proposal.tool,proposal.args,[],mapping));
+   assert.equal(echoCount(),priorEchoCount+1);
+   await pool.query("UPDATE tasks SET status='completed',lease_token=NULL WHERE id=$1",[f.task.id]);await pool.query("UPDATE runs SET status='completed' WHERE id=$1",[f.run]);
+ });
+ await t.test('Ablehnung, Scope-Wechsel, Ablauf und abgebrochene Aufträge heben keine Rechte auf',async()=>{
+   const proposal={tool:'mcp_inbox_echo',args:{text:'denied'}};
+   const f=await fixture('approval',{action:'Echo',proposal});
+   assert.equal((await request('decisions/respond',{id:f.decision,choice:'deny',message:'Nicht senden'},user.cookie)).status,200);
+   await assert.rejects(()=>transaction(c=>decisionConsent(c,f.task,proposal.tool,proposal.args,'deny-op',mapping)));
+   await assert.rejects(()=>transaction(c=>createDecision(c,f.task,{question:'Nochmal?',kind:'approval',action:'Echo',proposal},randomUUID(),mapping)));
+   const changed=await fixture('approval',{action:'Echo',proposal:{...proposal,args:{text:'scope'}}});
+   await request('decisions/respond',{id:changed.decision,choice:'approve',accept_unknown_cost:true},user.cookie);
+   await pool.query("UPDATE connections SET url=$2 WHERE id=$1",[conn,fixtureUrl+'/other']);
+   await assert.rejects(()=>transaction(c=>decisionConsent(c,changed.task,proposal.tool,{text:'scope'},'scope-op',mapping)));
+   await pool.query('UPDATE connections SET url=$2 WHERE id=$1',[conn,fixtureUrl+'/mcp']);
+   await pool.query("UPDATE connections SET allowed_tools='[]' WHERE id=$1",[conn]);
+   await assert.rejects(()=>transaction(c=>decisionConsent(c,changed.task,proposal.tool,{text:'scope'},'revoked-op',mapping)));
+   await pool.query("UPDATE connections SET allowed_tools='[\"fixture_echo\"]' WHERE id=$1",[conn]);
+   const expired=await fixture('approval',{action:'Echo',proposal:{...proposal,args:{text:'expiry'}}});await pool.query("UPDATE decisions SET expires_at=now()-interval '1 second' WHERE id=$1",[expired.decision]);
+   assert.equal((await request('decisions/respond',{id:expired.decision,choice:'approve',accept_unknown_cost:true},user.cookie)).status,409);
+   const restored=await fixture('approval',{action:'Echo',proposal:{...proposal,args:{text:'checkpoint'}}});
+   await request('decisions/respond',{id:restored.decision,choice:'approve',accept_unknown_cost:true},user.cookie);
+   const {runCheckpoints}=await import('../../src/server/checkpoints.ts');
+   const cp:any=await runCheckpoints(actor,ws,restored.run,{action:'create',name:'Inbox checkpoint fixture'});
+   const pv:any=await runCheckpoints(actor,ws,restored.run,{action:'preview',id:cp.id});
+   await runCheckpoints(actor,ws,restored.run,{action:'restore',id:cp.id,token:pv.token});
+   assert.equal((await request('decisions/respond',{id:restored.decision,choice:'approve',accept_unknown_cost:true},user.cookie)).status,409);
+   await assert.rejects(()=>transaction(c=>decisionConsent(c,restored.task,proposal.tool,{text:'checkpoint'},'restore-op',mapping)));
+   const canceled=await fixture();await pool.query("UPDATE runs SET status='canceled' WHERE id=$1",[canceled.run]);
+   assert.equal((await request('decisions/respond',{id:canceled.decision,choice:'answer',message:'Zu spät'},user.cookie)).status,409);
+ });
+ await t.test('Zugangsanfragen, Geheimnisse und ältere Rückfragen erscheinen kontrolliert im Postfach',async()=>{
+   const f=await fixture('access',{access_target:'models'});
+   assert.equal((await request('decisions/respond',{id:f.decision,choice:'answer',message:'password=private'},user.cookie)).status,400);
+   assert.equal((await request('decisions/respond',{id:f.decision,choice:'access_ready',message:'In Modelle eingerichtet'},user.cookie)).status,200);
+   const legacy=await fixture();await pool.query('DELETE FROM decisions WHERE id=$1',[legacy.decision]);
+   const before=(await listDecisions(ws)).filter(d=>d.task_id===legacy.task.id);assert.equal(before.length,1);
+   const after=(await listDecisions(ws)).filter(d=>d.task_id===legacy.task.id);assert.equal(after.length,1);assert.equal(after[0].id,before[0].id);
+ });
+ await pool.query("UPDATE runs SET status='canceled' WHERE workspace_id=$1 AND status NOT IN('completed','failed','canceled')",[ws]);
+ await t.test('HTTP-Worker fragt nach, erhält Postfachantwort und beendet denselben Auftrag ohne echten Anbieter',async()=>{
+   const m=await request('models',{name:'Inbox fixture',provider_name:'Protocol fixture',endpoint:fixtureUrl+'/v1',model:'inbox-fixture',key:'fixture-only',monitor_enabled:false},user.cookie);assert.equal(m.status,200);
+   await request('default-model',{modelId:m.data.id},user.cookie);
+   const run=await request('runs',{goal:'Inbox protocol fixture: frage nach der Farbe und bestätige die Antwort.',agentId:agent},user.cookie);assert.equal(run.status,200,JSON.stringify(run.data));
+   const wait=async(fn:()=>Promise<boolean>)=>{for(let i=0;i<200;i++){if(await fn())return;await new Promise(r=>setTimeout(r,100));}assert.fail('Inbox worker fixture timeout');};
+   await wait(async()=>!!(await pool.query("SELECT 1 FROM tasks WHERE run_id=$1 AND status='input_required'",[run.data.id])).rowCount);
+   const item=(await request('decisions',undefined,user.cookie)).data.items.find((d:any)=>d.run_id===run.data.id);assert.equal(item.kind,'information');
+   assert.equal((await request('decisions/respond',{id:item.id,choice:'answer',message:'Dunkelblau'},user.cookie)).status,200);
+   await wait(async()=>!!(await pool.query("SELECT 1 FROM runs WHERE id=$1 AND status='completed'",[run.data.id])).rowCount);
+   const task=(await pool.query('SELECT result FROM tasks WHERE run_id=$1',[run.data.id])).rows[0];assert.match(task.result,/Dunkelblau/);
+ });
+ await pool.query("UPDATE runs SET status='canceled' WHERE workspace_id=$1 AND status NOT IN('completed','failed','canceled')",[ws]);
+}

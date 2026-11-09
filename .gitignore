@@ -1,0 +1,41 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+backups/
+test-results/
+
+# Local release credentials and generated signing output
+bridge-app/.signing/
+bridge-app/dist-signing/
+bridge-app/**/*.pfx
+bridge-app/**/*.p12
+bridge-app/**/*.p8
+bridge-app/**/*.key
+bridge-app/**/*.pem
+
+# Private updater release key (public verification key is bundled)
+.bridge-update-keys/
+
+# Generated release artifacts / desktop data
+.env*
+!.env.example
+!.env.self-hosted.example
+!**/signing.example.json
+desktop-app/payload/
+desktop-app/dist/
+desktop-app/node_modules/
+dist/
+.release/
+.local-state/
+*.dump
+*.objects.tar.gz
+*.pfx
+*.p12
+*.p8
+*.key
+*.pem
+
+.local-networks.yaml

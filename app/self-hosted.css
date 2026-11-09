@@ -1,0 +1,313 @@
+.self-hosted-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 64px;
+  align-items: start;
+}
+.self-hosted-grid h2 {
+  font-size: clamp(28px, 3.5vw, 44px);
+  line-height: 1.15;
+  margin: 16px 0 24px;
+}
+.self-hosted-grid p {
+  color: var(--muted);
+  line-height: 1.75;
+}
+.self-hosted-grid ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+  margin: 28px 0;
+}
+.self-hosted-grid li {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.self-hosted-grid li svg {
+  color: var(--accent, #76d4e5);
+  flex-shrink: 0;
+}
+.self-hosted-note {
+  font-size: 13px;
+}
+.self-hosted-form {
+  padding: 32px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel, #121c26);
+  min-width: 0;
+}
+.self-hosted-form h3 {
+  margin: 16px 0 24px;
+  font-size: 24px;
+}
+.self-hosted-form form,
+.self-hosted-optional {
+  display: grid;
+  gap: 20px;
+}
+.self-hosted-form label,
+.waitlist-admin label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.self-hosted-form input:not([type="checkbox"]),
+.self-hosted-form select,
+.self-hosted-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+.self-hosted-form summary {
+  cursor: pointer;
+  color: var(--accent, #76d4e5);
+  padding: 8px 0;
+}
+.self-hosted-optional {
+  padding-top: 16px;
+}
+.self-hosted-form .self-hosted-consent {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.self-hosted-consent input {
+  flex: 0 0 auto;
+  margin-top: 5px;
+}
+.self-hosted-form a {
+  color: var(--accent, #76d4e5);
+}
+.self-hosted-form small {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.waitlist-honeypot {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.waitlist-admin {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.waitlist-admin .section-title {
+  gap: 20px;
+  align-items: flex-start;
+}
+.waitlist-admin p {
+  line-height: 1.65;
+}
+.waitlist-admin .section-title p {
+  max-width: 780px;
+  color: var(--muted);
+}
+.waitlist-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 16px;
+}
+.waitlist-filters label:first-child {
+  flex: 1;
+  min-width: 220px;
+}
+.waitlist-filters select {
+  min-width: 170px;
+}
+.waitlist-breakdown {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.waitlist-admin table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.waitlist-admin th,
+.waitlist-admin td {
+  padding: 16px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+.waitlist-admin td small {
+  display: block;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.waitlist-use-case {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 540px;
+  font-size: 13px;
+}
+.waitlist-admin .settings-panel {
+  display: grid;
+  gap: 20px;
+}
+.waitlist-admin .notice {
+  font-size: 12px;
+  color: var(--muted);
+}
+.sidebar-project-hint {
+  margin: 10px 20px 20px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+.sidebar-nav-group {
+  margin: 8px 12px;
+  border-top: 1px solid var(--border);
+}
+.sidebar-nav-group summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 16px 8px;
+  color: var(--muted);
+  font-size: 12px;
+  list-style: none;
+}
+.sidebar-nav-group summary::-webkit-details-marker {
+  display: none;
+}
+.sidebar-nav-group[open] summary svg {
+  transform: rotate(180deg);
+}
+.sidebar-nav-group nav .nav-item {
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+}
+.project-work-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.project-work-tabs a {
+  padding: 8px 11px;
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.project-work-tabs a:hover,
+.project-work-tabs a[aria-current="page"] {
+  background: rgba(118, 212, 229, 0.12);
+  color: var(--accent, #76d4e5);
+}
+@media (max-width: 900px) {
+  .self-hosted-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .self-hosted-form {
+    padding: 24px;
+  }
+  .waitlist-admin .section-title {
+    flex-direction: column;
+  }
+}
+@media (max-width: 700px) {
+  .project-work-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .project-work-tabs a {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .self-hosted-consent span {
+    font-size: 12px;
+  }
+}
+.sidebar-nav-group summary {
+  gap: 10px;
+}
+.sidebar-nav-group summary span {
+  flex: 1;
+}
+.sidebar-nav-group[open] summary svg:not(.group-chevron) {
+  transform: none;
+}
+@media (max-width: 900px) {
+  .sidebar-project-hint {
+    display: none;
+  }
+  .sidebar-nav-group {
+    margin: 8px 0;
+  }
+  .sidebar-nav-group summary {
+    justify-content: center;
+    padding: 14px 6px;
+  }
+  .sidebar-nav-group summary span,
+  .sidebar-nav-group .group-chevron {
+    display: none;
+  }
+  .sidebar-nav-group nav {
+    margin-top: 0;
+  }
+  .sidebar-nav-group .nav-item {
+    padding: 12px 8px;
+  }
+}
+
+.sidebar-nav-group {
+  margin: 4px 8px;
+}
+.sidebar-nav-group summary {
+  padding: 10px 4px;
+  gap: 8px;
+}
+.sidebar-nav-group summary span {
+  white-space: nowrap;
+}
+.sidebar-nav-group nav {
+  margin: 0 0 8px;
+}
+.sidebar-project-hint {
+  margin: 8px 12px 14px;
+  line-height: 1.5;
+}
+.sidebar-navigation > nav {
+  margin-bottom: 12px;
+}
+.organisation-suite .section-title,
+.waitlist-admin .section-title {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.organisation-suite .section-title > div,
+.waitlist-admin .section-title > div {
+  flex: 1;
+  min-width: 220px;
+}
+@media (max-width: 900px) {
+  .sidebar-nav-group {
+    margin: 4px 0;
+  }
+  .sidebar-nav-group summary {
+    padding: 12px 4px;
+  }
+  .sidebar-navigation > nav {
+    margin-top: 12px;
+  }
+}
+/* Private installs use invitations; do not advertise closed public signup. */
+body[data-registration="closed"] [data-registration-toggle]{display:none}

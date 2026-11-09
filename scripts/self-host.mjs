@@ -1,0 +1,59 @@
+import fs from 'node:fs';
+import {ensureLocalNetworks,networkSettings} from './local-network.mjs';
+import path from 'node:path';
+import {randomBytes,createHash} from 'node:crypto';
+import {spawnSync,spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+
+export const projectRoot=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+export function parseEnv(text){return Object.fromEntries(text.split(/\r?\n/).filter(l=>/^[A-Z_][A-Z0-9_]*=/.test(l)).map(l=>[l.slice(0,l.indexOf('=')),l.slice(l.indexOf('=')+1)]));}
+export function prepare(root=projectRoot,options={}){
+ const envFile=path.join(root,'.env');
+ if(fs.existsSync(envFile)){
+  const old=parseEnv(fs.readFileSync(envFile,'utf8'));
+  if(old.DEPLOYMENT_MODE!=='self-hosted')throw Error('Existing installation is not self-hosted. Use a separate folder; no account or secret conversion is performed.');
+  for(const key of ['POSTGRES_PASSWORD','ENCRYPTION_KEY','WORKER_TOKEN','APP_TOKEN','ADMIN_EMAIL','ADMIN_PASSWORD','KERNCLOUD_COMPOSE_PROJECT','KERNCLOUD_PORT'])if(!old[key])throw Error('Existing configuration is incomplete: '+key+'. Restore your configuration; secrets are never silently replaced.');
+  return {created:false,config:old};
+ }
+ const port=Number(options.port??3100),gatewayPort=Number(options.gatewayPort??3200);
+ if(!Number.isInteger(port)||port<1024||port>65535||!Number.isInteger(gatewayPort)||gatewayPort<1024||gatewayPort>65535||port===gatewayPort)throw Error('Invalid local ports');
+ const database=options.database??'kerncloud';if(!/^[a-z][a-z0-9_]{0,50}$/.test(database))throw Error('Invalid database name');
+ const project=options.project??'kerncloud-selfhost-'+createHash('sha256').update(path.resolve(root)).digest('hex').slice(0,10);
+ if(!/^[a-z][a-z0-9_-]{1,60}$/.test(project))throw Error('Invalid Compose project');
+ const email=options.email??'admin@kerncloud.local';if(!/^[^\s=@]+@[^\s=]+$/.test(email))throw Error('Invalid administrator email');
+ const password=randomBytes(24).toString('hex');
+ const config={DEPLOYMENT_MODE:'self-hosted',ALLOW_REGISTRATION:'false',KERNCLOUD_COMPOSE_PROJECT:project,KERNCLOUD_PORT:String(port),KERNCLOUD_GATEWAY_PORT:String(gatewayPort),KERNCLOUD_DB_NAME:database,KERNCLOUD_IMAGE:'kerncloud-selfhost:0.38.0',KERNCLOUD_BIND_ADDRESS:'127.0.0.1',POSTGRES_PASSWORD:password,DATABASE_URL:'postgresql://kerncloud:'+password+'@postgres:5432/'+database,ENCRYPTION_KEY:randomBytes(32).toString('hex'),WORKER_TOKEN:randomBytes(32).toString('hex'),APP_TOKEN:randomBytes(32).toString('hex'),ADMIN_EMAIL:email,ADMIN_PASSWORD:randomBytes(24).toString('base64url'),PUBLIC_URL:'http://localhost:'+port,PLATFORM_URL:'http://localhost:'+port,PUBLIC_ENVIRONMENT_URL:'http://localhost:'+gatewayPort,ALLOW_LOCAL_ENDPOINTS:'true',WORKER_CONCURRENCY:'2'};
+ fs.writeFileSync(envFile,Object.entries(config).map(([k,v])=>k+'='+v).join('\n')+'\n',{flag:'wx',mode:0o600});
+ return {created:true,config};
+}
+export function currentImage(root=projectRoot){const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version;if(!/^\d+\.\d+\.\d+$/.test(version))throw Error('Invalid installed release version');return 'kerncloud-selfhost:'+version;}
+export function configureNetwork(root,input){const config=prepare(root).config,next={...config,...networkSettings(input)};const temp=path.join(root,'.env.network-update');fs.writeFileSync(temp,Object.entries(next).map(([k,v])=>k+'='+v).join('\n')+'\n',{mode:0o600});fs.renameSync(temp,path.join(root,'.env'));return next;}
+export function dockerArgs(config,...args){return ['compose','--project-name',config.KERNCLOUD_COMPOSE_PROJECT,'--env-file','.env','-f','compose.self-hosted.yaml',...(fs.existsSync('.local-networks.yaml')?['-f','.local-networks.yaml']:[]),...args];}
+export function runDocker(args,root=projectRoot){const r=spawnSync('docker',args,{cwd:root,stdio:'inherit',windowsHide:true,env:{...process.env,KERNCLOUD_IMAGE:currentImage(root)},timeout:1800000});if(r.error)throw Error('Docker could not start. Install Docker Desktop/Engine and start its Linux engine.');if(r.status!==0)throw Error('Docker command failed. Configuration and volumes have been preserved.');}
+export function doctor(root=projectRoot){for(const args of [['version','--format','{{.Server.Os}}'],['compose','version']]){const r=spawnSync('docker',args,{cwd:root,encoding:'utf8',windowsHide:true,timeout:15000});if(r.error||r.status!==0)throw Error('Docker Engine with Compose v2 must be installed and running.');if(args[0]==='version'&&r.stdout.trim()!=='linux')throw Error('Switch Docker to Linux containers.');}console.log('Docker Linux engine and Compose are available.');}
+export async function waitForHealth(port,timeout=300000){const end=Date.now()+timeout;while(Date.now()<end){try{const r=await fetch('http://127.0.0.1:'+port+'/api/health',{signal:AbortSignal.timeout(2500)});if(r.ok)return;}catch{}await new Promise(r=>setTimeout(r,1500));}throw Error('Startup is still incomplete. Run status/logs; no data has been deleted.');}
+export async function main(args=process.argv.slice(2),root=projectRoot){
+ const command=args[0]??'help';
+ process.chdir(root);
+ if(command==='help'){console.log('KeRnCloud local: init | doctor | start | stop | status | logs | backup | update\ninit options: --port 3100 --gateway-port 3200 --email you@example.com\nCredentials: ADMIN_EMAIL and ADMIN_PASSWORD in the private .env file.');return;}
+ if(!['init','doctor','start','stop','status','logs','backup','update'].includes(command))throw Error('Unknown command');
+ const options={};for(let i=1;i<args.length;i+=2){const keys={'--port':'port','--gateway-port':'gatewayPort','--email':'email'};if(!keys[args[i]]||!args[i+1])throw Error('Invalid option');options[keys[args[i]]]=args[i+1];}
+ if(command==='doctor'){doctor(root);return;}
+ const {created,config}=prepare(root,options);
+ if(command==='init'){console.log(created?'Created private local configuration.':'Existing secrets and configuration preserved.');return;}
+ doctor(root);
+ const compose=(...a)=>runDocker(dockerArgs(config,...a),root);
+ if(command==='start'){ensureLocalNetworks(root,config);compose('up','-d','--build','--scale','worker=2');await waitForHealth(config.KERNCLOUD_PORT);console.log('Ready: '+config.PUBLIC_URL+'/login');}
+ if(command==='stop')compose('stop');
+ if(command==='status')compose('ps');
+ if(command==='logs')compose('logs','--tail','80','app','worker');
+ if(command==='backup')await backup(root,config);
+ if(command==='update'){
+  const r=spawnSync('docker',dockerArgs(config,'exec','-T','postgres','psql','-U','kerncloud','-d',config.KERNCLOUD_DB_NAME,'-t','-A','-c',"SELECT count(*) FROM runs WHERE status NOT IN ('completed','failed','canceled');"),{cwd:root,encoding:'utf8',windowsHide:true});
+  if(r.status!==0||r.stdout.trim()!=='0')throw Error('Pause/finish running tasks first. Update has not started.');
+  await backup(root,config);ensureLocalNetworks(root,config);compose('up','-d','--build','--scale','worker=2');await waitForHealth(config.KERNCLOUD_PORT);console.log('Updated; secrets, database and object volumes retained.');
+ }
+}
+async function pipeToFile(args,destination,root){const child=spawn('docker',args,{cwd:root,stdio:['ignore','pipe','inherit'],windowsHide:true});const out=fs.createWriteStream(destination,{flags:'wx',mode:0o600});await Promise.all([new Promise((resolve,reject)=>{child.on('error',reject);child.on('exit',code=>code===0?resolve():reject(Error('Backup command failed')));}),new Promise((resolve,reject)=>{out.on('finish',resolve);out.on('error',reject);child.stdout.on('error',reject);child.stdout.pipe(out);})]);}
+export async function backup(root,config){const folder=path.join(root,'backups');fs.mkdirSync(folder,{recursive:true,mode:0o700});const stamp=new Date().toISOString().replace(/[:.]/g,'-')+'-'+randomBytes(3).toString('hex'),base=path.join(folder,stamp);await pipeToFile(dockerArgs(config,'exec','-T','postgres','pg_dump','-U','kerncloud','-Fc',config.KERNCLOUD_DB_NAME),base+'.dump',root);await pipeToFile(dockerArgs(config,'exec','-T','object-storage','tar','-C','/data','-czf','-','.'),base+'.objects.tar.gz',root);fs.writeFileSync(base+'.manifest.json',JSON.stringify({database:path.basename(base)+'.dump',objects:path.basename(base)+'.objects.tar.gz',requires:'Preserve the matching private .env / ENCRYPTION_KEY separately',created_at:new Date().toISOString()},null,2),{flag:'wx',mode:0o600});console.log('Backup saved. Preserve the matching .env separately.');return base;}
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url))main().catch(e=>{console.error(e.message);process.exitCode=1;});

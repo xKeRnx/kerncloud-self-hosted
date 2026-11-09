@@ -1,0 +1,223 @@
+.workspace-env-hub {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.workspace-env-hub > .page-heading,
+.workspace-env-hub > .panel {
+  margin: 0;
+}
+.workspace-env-hub .page-heading {
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.workspace-env-hub .page-heading > div {
+  flex: 1;
+  min-width: 260px;
+}
+.workspace-env-hub .page-heading p {
+  line-height: 1.7;
+  max-width: 850px;
+}
+.workspace-env-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.workspace-env-summary .panel {
+  margin: 0;
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+}
+.workspace-env-summary span {
+  font-size: var(--ui-font-12, 12px);
+  color: var(--muted);
+}
+.workspace-env-summary strong {
+  font-size: 27px;
+}
+.workspace-env-hub-filters {
+  display: grid;
+  grid-template-columns:
+    minmax(160px, 1fr) minmax(130px, 0.7fr) minmax(180px, 1.2fr)
+    auto;
+  gap: 16px;
+  padding: 20px;
+  align-items: end;
+}
+.workspace-env-hub-filters .field {
+  margin: 0;
+}
+.workspace-env-hub-filters .secondary {
+  min-height: 42px;
+}
+.workspace-env-hub-note {
+  display: block !important;
+  line-height: 1.75 !important;
+  margin: 0 !important;
+}
+.workspace-env-count {
+  color: var(--muted);
+  font-size: var(--ui-font-12, 12px);
+  margin: 0;
+}
+.workspace-env-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 20px;
+  min-width: 0;
+}
+.workspace-env-hub-card {
+  padding: 24px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.workspace-env-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.workspace-env-card-heading > svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.workspace-env-card-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.workspace-env-assignment {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--ui-surface, #0b141c);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+}
+.workspace-env-assignment span {
+  color: var(--muted);
+  font-size: var(--ui-font-12, 12px);
+}
+.workspace-env-assignment a {
+  overflow-wrap: anywhere;
+}
+.workspace-env-hub-card dl {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.workspace-env-hub-card dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.workspace-env-hub-card dt {
+  font-size: var(--ui-font-12, 12px);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.workspace-env-hub-card dd {
+  margin: 0;
+  font-size: var(--ui-font-12, 12px);
+  overflow-wrap: anywhere;
+}
+.workspace-env-hub-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 8px;
+}
+.workspace-env-hub-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.workspace-env-operation-note,
+.workspace-env-last-error {
+  font-size: var(--ui-font-12, 12px);
+  line-height: 1.7;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.workspace-env-hub-empty {
+  text-align: center;
+  padding: 38px;
+  margin: 0;
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+}
+.workspace-env-hub-empty h2,
+.workspace-env-hub-empty p {
+  margin: 0;
+}
+.workspace-env-pagination {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.workspace-env-transfer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  background: var(--ui-overlay, #02070dd9);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+.workspace-env-transfer-dialog {
+  padding: 28px;
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  display: grid;
+  gap: 20px;
+}
+.workspace-env-transfer-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.workspace-env-transfer-dialog h2,
+.workspace-env-transfer-dialog p {
+  margin: 0;
+}
+.workspace-env-transfer-dialog p {
+  line-height: 1.75;
+}
+.workspace-env-transfer-dialog form {
+  display: grid;
+  gap: 20px;
+}
+.workspace-env-transfer-dialog .field {
+  margin: 0;
+}
+@media (max-width: 800px) {
+  .workspace-env-hub-filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .workspace-env-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 500px) {
+  .workspace-env-hub-filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace-env-transfer-backdrop {
+    padding: 12px;
+  }
+}

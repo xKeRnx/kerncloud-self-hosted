@@ -1,0 +1,83 @@
+KeRnCloud Source Available License 1.0
+Copyright (c) 2026 KeRn-WS. All rights reserved except as expressly granted below.
+Commercial licensing contact: support@kern-ws.com · https://kern-ws.com
+
+1. Scope and definitions
+"Licensor" means the copyright holder KeRn-WS. "Software" means the original
+KeRnCloud code and documentation bearing this license, and modifications or
+derivative works of that code. "Source" means the preferred form for making
+modifications, including build scripts, installation instructions and dependency
+manifests necessary to reproduce a distributed version. Third-party materials
+are excluded and remain governed by their own licenses.
+
+2. Permitted use
+Subject to these conditions, Licensor grants you a worldwide, non-exclusive,
+royalty-free license to inspect, run, copy and modify the Software for personal
+use, research, evaluation and your organization's internal business operations.
+You may use output produced by the Software in your business, including selling
+your own independent output, provided this does not distribute or provide a
+paid service consisting of the Software itself. Ordinary access by your own
+employees and contractors to your internal installation is permitted.
+
+3. Commercial reservation
+Without Licensor's separate prior written commercial permission, you must not:
+(a) sell, rent, sublicense for payment, or otherwise charge for the Software,
+    copies, derivative works, distributions or access to the Software;
+(b) provide the Software or a derivative as paid hosting, a managed service,
+    a white-label platform, a hosted agent-workspace service or a software
+    subscription for third parties;
+(c) bundle the Software or a derivative in a product or service sold to third
+    parties as a means of charging for the Software; or
+(d) impose license fees, download fees, mandatory donations or equivalent
+    consideration for receiving or using the Software or its derivatives.
+Changing the name, interface, deployment format or billing description does not
+remove these conditions. Licensor reserves the right to sell, host, license and
+otherwise commercialize its own Software and to authorize others separately.
+Independent consulting about a recipient's permitted internal installation is
+allowed if it does not sell copies, paid access, licenses or hosted operation of
+the Software. No rights to Licensor's trademarks are granted.
+
+4. Free redistribution and source availability
+You may distribute the Software or derivatives without charge only if you:
+(a) include this license, retain copyright and third-party notices, and identify
+    your modifications and their dates;
+(b) distribute the complete corresponding Source with each binary, installer,
+    container or other compiled distribution, or provide recipients a working,
+    no-charge link to that exact Source for as long as you distribute it;
+(c) license your modifications and the derivative Software under these same
+    conditions, without additional restrictions or removal of section 3; and
+(d) do not represent your distribution as an official KeRn-WS release.
+If you make a modified version available to third parties over a network, even
+without a charge, provide those users a prominent working link to the complete
+Source of that running version under this license. Private internal changes
+not distributed or offered to third parties need not be published. No provision
+requires disclosure of passwords, private keys, user data or independent works.
+
+5. Contributions and ownership
+No copyright transfer is implied. A contribution does not automatically give
+Licensor rights to sell the contributor's work. Contributions for inclusion in
+commercial releases require a separate written contributor agreement granting
+the necessary commercial and relicensing rights before they are merged.
+
+6. Termination
+Your rights terminate automatically upon violation. If this is your first
+violation and you cure it within 30 days after receiving notice, your rights are
+reinstated unless Licensor informs you otherwise in writing. Termination does
+not remove obligations already arising from distributions or network provision.
+Rights which cannot legally be restricted are unaffected.
+
+7. No warranty; limitation of liability
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, LICENSOR AND CONTRIBUTORS
+ARE NOT LIABLE FOR CLAIMS, DAMAGES OR OTHER LIABILITY ARISING FROM USE OF OR
+INABILITY TO USE THE SOFTWARE. MANDATORY STATUTORY LIABILITY REMAINS UNAFFECTED.
+
+8. Separate agreements and third-party rights
+Only Licensor may grant an exception to the commercial restrictions for its own
+copyright interests, by a separate written agreement. This license does not
+relicense dependencies or give Licensor exclusive rights over third-party code.
+If a provision is unenforceable, the remaining provisions remain in effect to
+the extent permitted by law. This is a source-available license, not an
+OSI-approved open-source license.

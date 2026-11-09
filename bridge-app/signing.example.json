@@ -1,0 +1,13 @@
+{
+  "publisher": { "name": "KeRn-WS", "website": "https://kern-ws.com", "email": "support@kern-ws.com", "businessType": "sole-proprietor" },
+  "windows": {
+    "provider": "azure",
+    "signtool": "",
+    "expectedSubject": "",
+    "timestampUrl": "http://timestamp.acs.microsoft.com",
+    "azure": { "endpoint": "https://weu.codesigning.azure.net", "account": "", "profile": "", "dlib": "" },
+    "certificateStore": { "thumbprint": "", "store": "My", "machineStore": false }
+  },
+  "macos": { "identity": "", "teamId": "", "keychain": "", "notaryProfile": "", "notaryKeychain": "" },
+  "linux": { "gpg": "gpg", "gpgv": "gpgv", "fingerprint": "", "gnupgHome": "", "repositoryUrl": "https://kern-ws.com/downloads/bridge/apt", "suite": "stable", "component": "main", "validDays": 14 }
+}

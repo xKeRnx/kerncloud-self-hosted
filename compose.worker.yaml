@@ -1,0 +1,11 @@
+name: kerncloud-worker
+services:
+  worker:
+    image: kerncloud-local:0.2
+    command: ["npm", "run", "worker"]
+    environment:
+      PLATFORM_URL: ${PLATFORM_URL:?Set the reachable platform URL}
+      WORKER_TOKEN: ${WORKER_TOKEN:?Set the worker credential}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+    restart: unless-stopped
+

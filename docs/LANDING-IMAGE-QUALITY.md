@@ -1,0 +1,5 @@
+# Landing image quality
+
+The former workspace .png files were actually JPEG previews with soft text. They remain for compatibility but Horizon no longer displays them. The six workspace-vector/*.svg assets contain sanitized snapshots of the actual application DOM and its desktop CSS from the dedicated showcase database. Text, icons and panels remain vector at display density and zoom. The snapshots embed the existing Manrope font, freeze responsive media rules at the captured 1440px viewport, and disable animation. They contain only neutral example data, no scripts, remote assets, live links, actions, credentials or customer records. Capture provenance is stored in SOURCES.txt.
+
+Horizon/Canvas photography uses the same original Unsplash photos, with local 640/1600/3840px WebP derivatives at quality 92. Sources use fit=max; no upscaling from old 1400/1600px previews. Native srcset/sizes selects device-appropriate resolution. Hero and full-width photos use 100vw; smaller photos use the column width. All photography stays local, with existing lazy loading and hero priority. Original alternatives and customer dashboard theme are unchanged.

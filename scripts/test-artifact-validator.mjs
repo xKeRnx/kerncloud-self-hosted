@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+const endpoint='http://127.0.0.1:3210/validate';
+const csp="sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'self'";
+const checks=[{action:'click',selector:'button'},{action:'assert_visible',selector:'#answer'},{action:'assert_attribute',selector:'button',attribute:'aria-expanded',value:'true'},{action:'press',selector:'button',value:'Enter'},{action:'assert_visible',selector:'#answer',value:'false'}];
+const html=`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><button aria-expanded="false" aria-controls="answer">FAQ</button><p id="answer" hidden>Answer</p><script>document.querySelector('button').onclick=function(){const p=document.getElementById(this.getAttribute('aria-controls'));p.hidden=!p.hidden;this.setAttribute('aria-expanded',String(!p.hidden));}</script></body></html>`;
+async function run(source,steps=checks){const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+process.env.VALIDATOR_TOKEN},body:JSON.stringify({html:source,csp,checks:steps}),signal:AbortSignal.timeout(28000)});assert.equal(r.status,200);return r.json();}
+const denied=await fetch(endpoint,{method:'POST',body:'{}'});assert.equal(denied.status,403);
+const broken=await run(html.replace("this.getAttribute('aria-controls')","this.dataset.target"));assert.equal(broken.passed,false);assert.ok(broken.results.some(r=>r.errors.length>0));
+const fixed=await run(html);assert.equal(fixed.passed,true,JSON.stringify(fixed));assert.equal(fixed.results.length,2);
+const overflow=await run(html.replace('<body>','<body><div style="width:2500px">Overflow</div>'));assert.equal(overflow.passed,false);
+const network=await run(html.replace('</body>',`<script>fetch('http://host.docker.internal:3100')</script></body>`));assert.equal(network.passed,false);assert.ok(network.results.some(r=>r.errors.some(e=>e.includes('Content Security Policy')||e.includes('connect-src'))));
+console.log(JSON.stringify({realChromium:true,authorization:true,brokenRejected:true,correctedAccepted:true,keyboard:true,mobileAndDesktop:true,overflowRejected:true,networkBlocked:true}));

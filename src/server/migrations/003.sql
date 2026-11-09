@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS model_deltas(id bigserial PRIMARY KEY, workspace_id text NOT NULL REFERENCES workspaces ON DELETE CASCADE,run_id text NOT NULL REFERENCES runs ON DELETE CASCADE,task_id text NOT NULL REFERENCES tasks ON DELETE CASCADE,agent_id text NOT NULL,call_id text NOT NULL REFERENCES model_calls ON DELETE CASCADE,content text NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS deltas_workspace ON model_deltas(workspace_id,id);
+ALTER TABLE model_offerings ADD COLUMN IF NOT EXISTS streaming boolean NOT NULL DEFAULT true;
+CREATE TABLE IF NOT EXISTS profiles(user_id text PRIMARY KEY REFERENCES users ON DELETE CASCADE,company text NOT NULL DEFAULT '',billing_email text NOT NULL DEFAULT '',address text NOT NULL DEFAULT '',vat_id text NOT NULL DEFAULT '');
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS attachment_ids jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS stripe_customer_id text UNIQUE;
+ALTER TABLE accounts ADD COLUMN IF NOT EXISTS stripe_subscription_id text UNIQUE;
+CREATE TABLE IF NOT EXISTS billing_events(id text PRIMARY KEY,kind text NOT NULL,created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS invoices(id text PRIMARY KEY,account_id text NOT NULL REFERENCES accounts ON DELETE CASCADE,number text NOT NULL,status text NOT NULL,currency text NOT NULL,amount integer NOT NULL,hosted_url text,pdf_url text,created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS analytics_events(id bigserial PRIMARY KEY,created_at timestamptz NOT NULL DEFAULT now(),kind text NOT NULL,page text NOT NULL,target text NOT NULL DEFAULT '',referrer text NOT NULL DEFAULT '',bot boolean NOT NULL DEFAULT false,user_id text REFERENCES users ON DELETE SET NULL);
+CREATE INDEX IF NOT EXISTS analytics_created ON analytics_events(created_at);
+CREATE UNIQUE INDEX IF NOT EXISTS plans_stripe_price ON plans(stripe_price_id) WHERE stripe_price_id IS NOT NULL;
+INSERT INTO schema_migrations(version) VALUES(3) ON CONFLICT DO NOTHING;
