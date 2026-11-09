@@ -45,7 +45,7 @@ jobs:
       - run: npm run test:integration
         env:
           TEST_DATABASE_URL: postgresql://kerncloud:integration-fixture-only@localhost:5432/kerncloud_ci_test
-          DEPLOYMENT_MODE: saas
+          DEPLOYMENT_MODE: self-hosted
           ALLOW_REGISTRATION: 'true'
           PUBLIC_URL: http://localhost:3100
           PUBLIC_ENVIRONMENT_URL: http://localhost:3200

@@ -1,4 +1,5 @@
 import test from "node:test";
+import { selfHostedEdition } from "../../src/core/edition.ts";
 import assert from "node:assert/strict";
 import {
   createServer,
@@ -697,7 +698,7 @@ test(
     await agentInspectorTests(t, { request, pool });
     if (process.env.AGENT_INSPECTOR_FOCUS === "1") return;
     const { waitlistTests } = await import("./self-hosted-waitlist.ts");
-    await waitlistTests(t, { request, pool, admin });
+    if (!selfHostedEdition) await waitlistTests(t, { request, pool, admin });
     if (process.env.WAITLIST_FOCUS === "1") return;
     const { organisationTests } = await import("./organisation.ts");
     if (process.env.ORGANISATION_FOCUS === "1") {
@@ -1155,6 +1156,22 @@ test(
       ).status,
       200,
     );
+    if (selfHostedEdition) {
+      // Public-edition contracts replace paid SaaS subscription fixtures below.
+      const { selfHostedEditionTests } = await import("./self-hosted-edition.ts");
+      await selfHostedEditionTests(t, { request, pool, admin });
+      const { runtimeImprovementTests } = await import("./runtime-improvements.ts");
+      await runtimeImprovementTests(t, fixtureUrl, platformUrl);
+      const { resultTests } = await import("./artifacts.ts");
+      await resultTests(t, { request, pool, handle, alice, bob, a });
+      const { capabilityTests } = await import("./model-capabilities.ts");
+      await capabilityTests(t, { request, pool, admin, foreign: alice });
+      const { reasoningProfileTests } = await import("./reasoning-profiles.ts");
+      await reasoningProfileTests(t, { request, pool, admin, foreignCookie: alice.cookie });
+      const { modelAvailabilityTests } = await import("./model-availability.ts");
+      await modelAvailabilityTests(t, { request, pool, fixtureUrl, foreignCookie: alice.cookie });
+      return;
+    }
     assert.equal(
       (
         await request(
