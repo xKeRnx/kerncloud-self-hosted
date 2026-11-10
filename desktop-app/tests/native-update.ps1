@@ -31,7 +31,7 @@ do {
   Start-Sleep -Seconds 2
   # NSIS removes the old executable before writing its replacement. Observe
   # that normal transition without treating the temporary absence as failure.
-  try { $actual = [Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion }
+  try { $actual = ([version]([Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion)).ToString(3) }
   catch { $actual = $null }
 } while ($actual -ne $expected -and (Get-Date) -lt $deadline)
 if ($actual -ne $expected) { throw "Installed version mismatch: $actual" }
