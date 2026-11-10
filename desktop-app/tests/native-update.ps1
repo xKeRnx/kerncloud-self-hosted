@@ -29,7 +29,10 @@ $expected = $env:RELEASE_TAG.TrimStart('v')
 $deadline = (Get-Date).AddMinutes(3)
 do {
   Start-Sleep -Seconds 2
-  $actual = [Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion
+  # NSIS removes the old executable before writing its replacement. Observe
+  # that normal transition without treating the temporary absence as failure.
+  try { $actual = [Diagnostics.FileVersionInfo]::GetVersionInfo($exe).ProductVersion }
+  catch { $actual = $null }
 } while ($actual -ne $expected -and (Get-Date) -lt $deadline)
 if ($actual -ne $expected) { throw "Installed version mismatch: $actual" }
 # Only close this disposable test installation after its installer relaunch.

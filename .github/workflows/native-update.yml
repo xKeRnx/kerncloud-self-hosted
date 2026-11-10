@@ -2,11 +2,19 @@ name: Native app upgrade
 on:
   workflow_call:
     inputs:
+      platform:
+        type: string
+        default: both
       release:
         required: true
         type: string
   workflow_dispatch:
     inputs:
+      platform:
+        description: 'Platforms to verify'
+        type: choice
+        default: both
+        options: [both, windows, linux]
       release:
         description: 'Signed candidate release tag'
         required: true
@@ -19,11 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: windows-latest
-            target: win
-          - os: ubuntu-22.04
-            target: linux
+        include: ${{ fromJSON(inputs.platform == 'windows' && '[{"os":"windows-latest","target":"win"}]' || inputs.platform == 'linux' && '[{"os":"ubuntu-22.04","target":"linux"}]' || '[{"os":"windows-latest","target":"win"},{"os":"ubuntu-22.04","target":"linux"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
