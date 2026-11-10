@@ -61,6 +61,7 @@ Desktop 0.38.3 and newer automatically check for verified app updates and can in
 node scripts/desktop-payload.mjs
 cd desktop-app
 npm ci
+node node_modules/electron/install.js
 npm test
 npm start
 npm run build

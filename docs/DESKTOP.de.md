@@ -28,6 +28,7 @@ Die Desktop-Installation verwendet standardmäßig Port **43100** für das Dashb
 node scripts/desktop-payload.mjs
 cd desktop-app
 npm ci
+node node_modules/electron/install.js
 npm test
 npm start
 # Auf dem jeweiligen Zielbetriebssystem:

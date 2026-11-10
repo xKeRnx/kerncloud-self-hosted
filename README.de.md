@@ -91,6 +91,7 @@ Docker bleibt erforderlich. Desktop ist der Launcher und Client; PostgreSQL, Wor
 node scripts/desktop-payload.mjs
 cd desktop-app
 npm ci
+node node_modules/electron/install.js
 npm test
 npm start
 # Installer auf dem jeweiligen Zielsystem bauen:
