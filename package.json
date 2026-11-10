@@ -34,7 +34,7 @@
     "local:backup": "node scripts/self-host.mjs backup",
     "local:update": "node scripts/self-host.mjs update",
     "release:check": "node scripts/release-check.mjs",
-    "test:local": "node --test tests/self-host.test.mjs",
+    "test:local": "node --test tests/self-host.test.mjs tests/local-process.test.mjs",
     "desktop:prepare": "node scripts/desktop-payload.mjs"
   },
   "dependencies": {

@@ -26,6 +26,8 @@ stop_fixture() {
 trap stop_fixture EXIT
 native first-start doctor
 native server-start start
+native warm-start start
+PROOF_DIR="$proof" node --input-type=module -e "import fs from 'node:fs';const p=process.env.PROOF_DIR;const cold=JSON.parse(fs.readFileSync(p+'/server-start.json')),warm=JSON.parse(fs.readFileSync(p+'/warm-start.json'));for(const phase of ['prepare','build','services','health','ready'])if(!cold.progressPhases.includes(phase))throw Error('Missing actual startup progress: '+phase);if(!warm.imagesReused)throw Error('Warm start unexpectedly rebuilt the server');"
 node scripts/test-installed-preservation.mjs "$KERNCLOUD_DESKTOP_DATA_DIR" seed "$proof/preservation.json"
 native server-update update
 node scripts/test-installed-preservation.mjs "$KERNCLOUD_DESKTOP_DATA_DIR" verify "$proof/preservation.json"

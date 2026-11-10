@@ -6,6 +6,9 @@ on:
     paths:
       - .github/workflows/linux-installer.yml
       - desktop-app/tests/linux-installed.sh
+      - desktop-app/**
+      - scripts/self-host.mjs
+      - scripts/local-process.mjs
       - scripts/test-installed-preservation.mjs
 permissions:
   contents: read

@@ -1,6 +1,6 @@
 {
   "name": "kerncloud-desktop",
-  "version": "0.38.1",
+  "version": "0.38.2",
   "private": true,
   "homepage": "https://kern-ws.com",
   "desktopName": "kerncloud.desktop",
@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "electron .",
-    "test": "node --test tests/*.test.cjs",
+    "test": "node --check main.cjs && node --check renderer.js && node --check progress.js && node --check preload.cjs && node --test tests/*.test.cjs",
     "build": "electron-builder --publish never"
   },
   "devDependencies": {
@@ -33,6 +33,7 @@
       "main.cjs",
       "preload.cjs",
       "renderer.js",
+      "progress.js",
       "index.html",
       "style.css",
       "policy.cjs",
