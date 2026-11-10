@@ -20,8 +20,10 @@ const {
 } = require("./policy.cjs");
 const progress = require("./progress.js");
 const { StringDecoder } = require("node:string_decoder");
+const { DesktopUpdates } = require("./updates.cjs");
 let launcher,
   workspace,
+  updates,
   busy = false,
   runtime,
   config = {};
@@ -111,6 +113,12 @@ else {
         (_w, _p, callback) => callback(false),
       );
       const action = async (command, input) => {
+        if (command === "updates:state") return updates.snapshot();
+        if (command === "updates:check") return updates.check({manual: true});
+        if (command === "updates:automatic") return updates.automatic(input?.enabled);
+        if (command === "updates:install") return updates.install();
+        if (updates?.installing && command !== "info")
+          throw Error("The app update is starting. Please wait.");
         if (command === "info") {
           const docker = await dockerSetup.detectDocker();
           let services = null;
@@ -140,6 +148,7 @@ else {
             version: app.getVersion(),
             platform: process.platform,
             autostart: loginAutostart(app, process.platform),
+            updates: updates.snapshot(),
           };
         }
         if (command === "autostart:on" || command === "autostart:off") {
@@ -153,13 +162,15 @@ else {
           return { message: "Opened the private local configuration file." };
         }
         if (command === "docker:setup") {
-          return dockerSetup.installDocker({
+          if (busy) throw Error("Wait for the current operation to finish.");
+          busy = true;
+          try { return await dockerSetup.installDocker({
             shell,
             directory: path.join(app.getPath("userData"), "installers"),
             resources: __dirname,
             log: (text) =>
               launcher.webContents.send("local:log", redact(text, config)),
-          });
+          }); } finally { busy = false; }
         }
         if (command === "network:save") {
           if (busy) throw Error("Wait for the current operation to finish.");
@@ -312,6 +323,15 @@ else {
           busy = false;
         }
       };
+      updates = new DesktopUpdates({
+        app,
+        trust: require("./update-trust.json"),
+        isBusy: () => busy,
+        onChange: (state) => {
+          if (!launcher.isDestroyed()) launcher.webContents.send("local:updates", state);
+        },
+      });
+      await updates.init();
       ipcMain.handle("local:action", (event, command, input) => {
         if (
           event.sender !== launcher.webContents ||
@@ -363,7 +383,7 @@ else {
         return;
       }
 
-      launcher.webContents.on("did-finish-load", () => {});
+      updates.start();
     })
     .catch((error) => {
       if (diagnosticReport) {
@@ -379,4 +399,5 @@ else {
       }
     });
   app.on("window-all-closed", () => app.quit());
+  app.on("before-quit", () => updates?.stop());
 }

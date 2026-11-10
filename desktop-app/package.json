@@ -1,6 +1,6 @@
 {
   "name": "kerncloud-desktop",
-  "version": "0.38.2",
+  "version": "0.38.3",
   "private": true,
   "homepage": "https://kern-ws.com",
   "desktopName": "kerncloud.desktop",
@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "electron .",
-    "test": "node --check main.cjs && node --check renderer.js && node --check progress.js && node --check preload.cjs && node --test tests/*.test.cjs",
+    "test": "node --check main.cjs && node --check renderer.js && node --check progress.js && node --check preload.cjs && node --check updates.cjs && node --test tests/*.test.cjs",
     "build": "electron-builder --publish never"
   },
   "devDependencies": {
@@ -40,7 +40,10 @@
       "package.json",
       "backend-runner.cjs",
       "docker-setup.cjs",
-      "docker-install-linux.sh"
+      "docker-install-linux.sh",
+      "updates.cjs",
+      "update-trust.json",
+      "update-native.json"
     ],
     "extraResources": [
       {
@@ -86,5 +89,8 @@
       "icon": "assets/icon.png",
       "maintainer": "KeRn-WS <support@kern-ws.com>"
     }
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
   }
 }

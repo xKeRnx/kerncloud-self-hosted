@@ -20,6 +20,7 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=3072
           NEXT_TELEMETRY_DISABLED: '1'
+      - run: npm ci --ignore-scripts --prefix desktop-app
       - run: npm test --prefix desktop-app
   integration:
     runs-on: ubuntu-latest

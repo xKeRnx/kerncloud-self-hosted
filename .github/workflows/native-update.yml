@@ -1,0 +1,51 @@
+name: Native app upgrade
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Signed candidate release tag'
+        required: true
+        default: 'v0.38.3'
+        type: string
+permissions:
+  contents: read
+jobs:
+  upgrade:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+          - os: ubuntu-22.04
+            target: linux
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      RELEASE_TAG: ${{ inputs.release }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+        working-directory: desktop-app
+      - name: Build synthetic older baseline (test only)
+        shell: bash
+        run: |
+          node scripts/desktop-payload.mjs
+          node -e "const fs=require('fs'),p=require('./desktop-app/package.json');p.version='0.38.2';fs.writeFileSync('desktop-app/package.json',JSON.stringify(p,null,2));"
+          node desktop-app/scripts/build.cjs ${{ matrix.target }} x64
+      - name: Native Windows update and retained runtime
+        if: runner.os == 'Windows'
+        run: pwsh -File desktop-app/tests/native-update.ps1
+      - name: Native Linux update and retained runtime
+        if: runner.os == 'Linux'
+        run: sh desktop-app/tests/native-update.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-upgrade-${{ matrix.target }}
+          path: |
+            ${{ runner.temp }}/native-updater-proof.json
+            ${{ runner.temp }}/native-upgrade-after.json

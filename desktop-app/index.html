@@ -253,6 +253,25 @@
           </p>
         </form>
       </section>
+      <section class="panel" id="app-updates">
+        <div class="section-title">
+          <h2 data-en="App updates" data-de="App-Updates">App updates</h2>
+          <span id="app-update-version" class="state-badge"></span>
+        </div>
+        <p id="app-update-status" role="status" aria-live="polite"></p>
+        <progress id="app-update-progress" max="100" hidden aria-label="Update download"></progress>
+        <label class="update-preference"><input type="checkbox" id="automatic-updates" checked />
+          <span data-en="Automatically check and download updates" data-de="Updates automatisch prüfen und herunterladen">Automatically check and download updates</span>
+        </label>
+        <div class="actions">
+          <button id="check-app-update" data-en="Check for updates" data-de="Nach Updates suchen">Check for updates</button>
+          <button id="install-app-update" class="primary" hidden data-en="Install & restart app" data-de="Installieren & App neu starten">Install & restart app</button>
+        </div>
+        <p class="hint" data-en="Downloaded updates can install the next time you open the app. Linux may request system permission. Local services keep running; your configuration, data and access permissions stay in place. Apply a new server version separately with Update local server, which creates a backup first."
+          data-de="Geladene Updates können beim nächsten Öffnen der App installiert werden. Linux kann eine Systemfreigabe anfordern. Lokale Dienste laufen weiter; Konfiguration, Daten und Freigaben bleiben erhalten. Eine neue Serverversion spielst du separat über Lokalen Server aktualisieren ein; dabei wird vorher ein Backup erstellt.">
+          Downloaded updates can install the next time you open the app. Linux may request system permission. Local services keep running; your configuration, data and access permissions stay in place. Apply a new server version separately with Update local server, which creates a backup first.
+        </p>
+      </section>
       <section class="panel" data-context="maintenance">
         <h2 data-en="Manage your installation" data-de="Installation verwalten">
           Manage your installation

@@ -1,5 +1,13 @@
 # Desktop-App: Windows, Linux und macOS
 
+## Automatische App-Updates ab 0.38.3
+
+Unter **App-Updates** prüft der Launcher beim Start und danach alle sechs Stunden die offizielle GitHub-Veröffentlichung. Passende Pakete werden automatisch geladen und kryptografisch geprüft. **Installieren & App neu starten** übernimmt das Update direkt. Ein bereits geladenes Update kann unter Windows/macOS beim nächsten App-Start installiert werden. Linux benötigt einen Klick und gegebenenfalls die Systemfreigabe. Die Automatik lässt sich ausschalten; manuelles Prüfen bleibt verfügbar. Ältere Launcher müssen einmal auf mindestens 0.38.3 aktualisiert werden.
+
+Laufende Start-/Stop-/Backup-/Update-Aktionen blockieren die Installation. Container laufen beim Launcher-Update weiter. Konfiguration, Schlüssel, Datenbank, Dateien und Freigaben bleiben an ihrem bisherigen Speicherort. Eine neue Serverversion wird separat über **Lokalen Server aktualisieren** eingespielt; dabei wird vorher ein Datenbank-/Dateibackup erstellt. Interne Denkprozesse oder neue KI-Aufträge werden dafür nicht benötigt.
+
+Die Veröffentlichung verwendet einen eigenen Ed25519-Signaturschlüssel, zeitlich begrenzte Metadaten, Versionsschutz und zwei Datei-Prüfsummen. Details zur Schlüsselverwaltung und Release-Automatik stehen in der [englischen Dokumentation](DESKTOP.md#publishing-app-updates).
+
 Die neue **KeRnCloud Desktop-App** ist vom vorhandenen **KeRnCloud Bridge-Adapter** getrennt. Desktop startet/stoppt die eigene lokale Plattform. Bridge erteilt einem Agenten gezielt Zugriff auf ein freigegebenes Gerät.
 
 ## Was die App macht

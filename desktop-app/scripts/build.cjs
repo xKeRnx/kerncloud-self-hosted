@@ -4,6 +4,8 @@ const [target,arch='x64']=process.argv.slice(2),signed=process.env.KERNCLOUD_REQ
 if(!['win','mac','linux'].includes(target)||!['x64','arm64'].includes(arch))throw Error('Specify win/mac/linux and x64/arm64');
 if(signed&&target!=='linux'&&(!process.env.CSC_LINK||!process.env.CSC_KEY_PASSWORD))throw Error('Signing credentials are required.');
 if(signed&&target==='mac'&&(!process.env.APPLE_ID||!process.env.APPLE_APP_SPECIFIC_PASSWORD||!process.env.APPLE_TEAM_ID))throw Error('Apple notarization credentials are required.');
+if(signed&&target==='win'&&!process.env.KERNCLOUD_WINDOWS_PUBLISHER)throw Error('Set KERNCLOUD_WINDOWS_PUBLISHER to the exact Authenticode certificate publisher name.');
+require('node:fs').writeFileSync('update-native.json',JSON.stringify({updaterCacheDirName:'kerncloud-desktop-updates',...(signed&&target==='win'?{publisherName:process.env.KERNCLOUD_WINDOWS_PUBLISHER}:{})},null,2)+'\n');
 if(!signed){delete process.env.CSC_LINK;delete process.env.CSC_KEY_PASSWORD;process.env.CSC_IDENTITY_AUTO_DISCOVERY='false';}
 const platform={win:Platform.WINDOWS,mac:Platform.MAC,linux:Platform.LINUX}[target];
 build({targets:platform.createTarget(target==='linux'?['AppImage']:undefined,Arch[arch]),publish:'never',config:{forceCodeSigning:signed&&target!=='linux',...(target==='mac'?{mac:{notarize:signed}}:{})}}).then(()=>{

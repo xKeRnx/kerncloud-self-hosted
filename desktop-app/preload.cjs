@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld("kernLocal", {
     ipcRenderer.on("local:log", (_event, text) => callback(text)),
   onProgress: (callback) =>
     ipcRenderer.on("local:progress", (_event, state) => callback(state)),
+  onUpdates: (callback) =>
+    ipcRenderer.on("local:updates", (_event, state) => callback(state)),
 });

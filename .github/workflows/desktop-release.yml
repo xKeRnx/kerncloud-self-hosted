@@ -1,0 +1,92 @@
+name: Publish desktop update
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Exact desktop-app/package.json version (for example 0.38.3)'
+        required: true
+        type: string
+      signed_windows:
+        description: 'Require Windows Authenticode credentials'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  build:
+    environment: desktop-release
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            target: win
+          - os: ubuntu-22.04
+            target: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify requested version and source hygiene
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          node -e "if(require('./desktop-app/package.json').version!==process.env.RELEASE_VERSION)throw Error('Version mismatch')"
+          node scripts/release-check.mjs
+          node scripts/desktop-payload.mjs
+      - run: npm ci
+        working-directory: desktop-app
+      - run: npm test
+        working-directory: desktop-app
+      - name: Build update packages
+        working-directory: desktop-app
+        run: node scripts/build.cjs ${{ matrix.target }} x64
+        env:
+          KERNCLOUD_REQUIRE_SIGNING: ${{ matrix.target == 'win' && inputs.signed_windows }}
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          KERNCLOUD_WINDOWS_PUBLISHER: ${{ vars.KERNCLOUD_WINDOWS_PUBLISHER }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: update-${{ matrix.target }}
+          path: |
+            desktop-app/dist/*.exe
+            desktop-app/dist/*.deb
+            desktop-app/dist/*.AppImage
+          if-no-files-found: error
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: desktop-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: update-*
+          path: desktop-artifacts
+          merge-multiple: true
+      - name: Sign update manifest
+        env:
+          DESKTOP_UPDATE_PRIVATE_KEY: ${{ secrets.KERNCLOUD_DESKTOP_UPDATE_PRIVATE_KEY }}
+        run: |
+          test -n "$DESKTOP_UPDATE_PRIVATE_KEY"
+          umask 077
+          printf '%s' "$DESKTOP_UPDATE_PRIVATE_KEY" > "$RUNNER_TEMP/desktop-release.pem"
+          KERNCLOUD_DESKTOP_UPDATE_KEY="$RUNNER_TEMP/desktop-release.pem" node desktop-app/scripts/prepare-update.cjs desktop-artifacts
+          rm "$RUNNER_TEMP/desktop-release.pem"
+      - name: Publish complete release atomically
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          git archive --format=zip --output=desktop-artifacts/kerncloud-selfhosted-source.zip HEAD
+          gh release create "v$RELEASE_VERSION" --target "$GITHUB_SHA" --draft --title "KeRnCloud $RELEASE_VERSION" --notes "Desktop update with persistent local configuration, data and permissions. Update the local server separately after backing up."
+          gh release upload "v$RELEASE_VERSION" desktop-artifacts/*
+          gh release edit "v$RELEASE_VERSION" --draft=false --latest

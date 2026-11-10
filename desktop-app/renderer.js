@@ -6,6 +6,7 @@ const $ = (selector) => document.querySelector(selector),
 let language =
     localStorage.getItem("kerncloud-desktop-language") === "de" ? "de" : "en",
   info,
+  updateState,
   busy = false,
   currentContext = null,
   refreshing = null;
@@ -24,6 +25,7 @@ function translate() {
   for (const node of document.querySelectorAll("[data-en]"))
     text(node, node.dataset[language] ?? node.dataset.en);
   renderServices();
+  renderUpdates();
   for (const [context, state] of states) renderProgress(context, state);
 }
 function message(context, value, error = false) {
@@ -185,11 +187,12 @@ function renderServices() {
   setControls();
 }
 function setControls() {
+  const appInstalling = ["verifying", "installing"].includes(updateState?.phase);
   for (const button of document.querySelectorAll("[data-action]")) {
-    let disabled = busy;
+    let disabled = busy || appInstalling;
     if (!info && ["start", "stop", "open"].includes(button.dataset.action))
       disabled = true;
-    if (info && !busy) {
+    if (info && !busy && !appInstalling) {
       const command = button.dataset.action;
       if (command === "start")
         disabled =
@@ -208,12 +211,14 @@ function setControls() {
   for (const field of document.querySelectorAll(
     "#network-form input,#network-form select,#network-form button,#autostart",
   ))
-    field.disabled = busy;
+    field.disabled = busy || appInstalling;
+  renderUpdates();
 }
 async function refresh(fields = false) {
   if (refreshing) return refreshing;
   refreshing = (async () => {
     info = await window.kernLocal.action("info");
+    updateState = info.updates;
     text($("#version"), "Version " + info.version);
     text($("#origin"), info.url);
     $("#autostart").checked = info.autostart;
@@ -248,6 +253,44 @@ window.kernLocal.onProgress((state) => {
   states.set(currentContext, state);
   renderProgress(currentContext, state);
 });
+function renderUpdates() {
+  if (!updateState) return;
+  const s = updateState, labels = {
+    idle: t("Updates are checked automatically when enabled.", "Updates werden bei aktivierter Automatik selbstständig geprüft."),
+    checking: t("Checking for app updates…", "App-Updates werden geprüft …"),
+    current: t("Your app is up to date.", "Deine App ist aktuell."),
+    unavailable: t("No automatic update package is available for this installation yet.", "Für diese Installation ist noch kein automatisches Update-Paket verfügbar."),
+    downloading: t("Downloading verified app update…", "Geprüftes App-Update wird heruntergeladen …"),
+    ready: t("Update ready. Install now or let it install the next time you open the app (Linux requires a click).", "Update bereit. Jetzt installieren oder beim nächsten Öffnen der App installieren lassen (unter Linux per Klick)."),
+    verifying: t("Verifying the update before installation…", "Update wird vor der Installation geprüft …"),
+    installing: t("Installing and restarting the app…", "App wird installiert und neu gestartet …"),
+    error: t("Could not complete the update. Your installation is unchanged. Check again later.", "Update konnte nicht abgeschlossen werden. Deine Installation ist unverändert. Bitte später erneut prüfen."),
+    "preferences-error": t("Check your update preferences and re-enable automatic updates if desired.", "Prüfe deine Update-Einstellung und aktiviere die Automatik bei Bedarf erneut."),
+  };
+  text($("#app-update-status"), (labels[s.phase] ?? labels.idle) + (s.availableVersion ? " · " + s.availableVersion : ""));
+  text($("#app-update-version"), "Version " + s.version);
+  $("#automatic-updates").checked = s.automatic;
+  const installing = ["verifying", "installing"].includes(s.phase);
+  $("#automatic-updates").disabled = installing;
+  $("#check-app-update").disabled = busy || ["checking", "downloading", "verifying", "installing"].includes(s.phase);
+  $("#install-app-update").hidden = s.phase !== "ready";
+  $("#install-app-update").disabled = busy || !s.canInstall;
+  $("#app-update-progress").hidden = s.phase !== "downloading";
+  $("#app-update-progress").value = s.progress;
+}
+window.kernLocal.onUpdates(state => {updateState = state; setControls();});
+async function updateAction(command, input) {
+  try {
+    updateState = await window.kernLocal.action(command, input);
+    setControls();
+  } catch (error) {
+    text($("#app-update-status"), String(error.message).replace(/^Error invoking remote method '[^']+': (?:Error: )?/, ""));
+    await window.kernLocal.action("updates:state").then(state => {updateState = state;}).catch(() => {});
+  }
+}
+$("#check-app-update").addEventListener("click", () => updateAction("updates:check"));
+$("#install-app-update").addEventListener("click", () => updateAction("updates:install"));
+$("#automatic-updates").addEventListener("change", e => updateAction("updates:automatic", {enabled: e.target.checked}));
 const success = {
   start: () =>
     t(

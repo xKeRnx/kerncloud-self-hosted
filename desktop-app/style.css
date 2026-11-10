@@ -412,6 +412,9 @@ button:disabled {
     transform: translateX(400%);
   }
 }
+.update-preference { display: flex; align-items: center; gap: 10px; margin: 18px 0; }
+#app-update-progress { display: block; width: 100%; height: 12px; accent-color: #4549f5; }
+#app-update-progress[hidden] { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .activity-icon,
   .activity-track span {
