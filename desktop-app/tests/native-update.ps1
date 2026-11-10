@@ -20,7 +20,10 @@ New-Item -ItemType Directory -Force -Path $client | Out-Null
 @{name='kerncloud-updater-fixture';version='0.38.2';main=(Join-Path $env:GITHUB_WORKSPACE 'desktop-app/tests/native-update.cjs')} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $client 'package.json')
 Copy-Item -LiteralPath (Join-Path $env:GITHUB_WORKSPACE 'desktop-app/update-native.json') -Destination $client
 $electron = Join-Path $env:GITHUB_WORKSPACE 'desktop-app/node_modules/electron/dist/electron.exe'
-$result = Start-Process -FilePath $electron -ArgumentList @($client) -WindowStyle Hidden -Wait -PassThru
+$result = Start-Process -FilePath $electron -ArgumentList @($client) -WindowStyle Hidden -PassThru
+# Start-Process -Wait also waits for the installer-relaunched app and would
+# deadlock the following window-close check. Wait only for the updater process.
+if (-not $result.WaitForExit(300000)) { throw 'Native updater process did not finish within five minutes' }
 if ($result.ExitCode -ne 0) { throw 'Native updater failed' }
 $expected = $env:RELEASE_TAG.TrimStart('v')
 $deadline = (Get-Date).AddMinutes(3)
