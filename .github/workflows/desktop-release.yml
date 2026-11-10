@@ -81,12 +81,30 @@ jobs:
           printf '%s' "$DESKTOP_UPDATE_PRIVATE_KEY" > "$RUNNER_TEMP/desktop-release.pem"
           KERNCLOUD_DESKTOP_UPDATE_KEY="$RUNNER_TEMP/desktop-release.pem" node desktop-app/scripts/prepare-update.cjs desktop-artifacts
           rm "$RUNNER_TEMP/desktop-release.pem"
-      - name: Publish complete release atomically
+      - name: Publish candidate after all uploads
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
           git archive --format=zip --output=desktop-artifacts/kerncloud-selfhosted-source.zip HEAD
-          gh release create "v$RELEASE_VERSION" --target "$GITHUB_SHA" --draft --title "KeRnCloud $RELEASE_VERSION" --notes "Desktop update with persistent local configuration, data and permissions. Update the local server separately after backing up."
+          gh release create "v$RELEASE_VERSION" --target "$GITHUB_SHA" --draft --prerelease --title "KeRnCloud $RELEASE_VERSION" --notes "Desktop update with persistent local configuration, data and permissions. Update the local server separately after backing up."
           gh release upload "v$RELEASE_VERSION" desktop-artifacts/*
-          gh release edit "v$RELEASE_VERSION" --draft=false --latest
+          gh release edit "v$RELEASE_VERSION" --draft=false --latest=false
+  verify:
+    needs: publish
+    uses: ./.github/workflows/native-update.yml
+    with:
+      release: v${{ inputs.version }}
+  promote:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: desktop-release
+    permissions:
+      contents: write
+    steps:
+      - name: Enable automatic discovery after native upgrades pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: gh release edit "v$RELEASE_VERSION" --prerelease=false --latest
