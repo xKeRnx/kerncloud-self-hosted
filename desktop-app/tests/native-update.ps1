@@ -30,7 +30,12 @@ do {
 } while ($actual -ne $expected -and (Get-Date) -lt $deadline)
 if ($actual -ne $expected) { throw "Installed version mismatch: $actual" }
 # Only close this disposable test installation after its installer relaunch.
-Get-Process | Where-Object { $_.Path -eq $exe } | ForEach-Object { $_.CloseMainWindow() | Out-Null; $_.WaitForExit(15000) | Out-Null }
+$deadline = (Get-Date).AddSeconds(45)
+do {
+  Start-Sleep -Seconds 1
+  $opened = @(Get-Process | Where-Object { $_.Path -eq $exe -and $_.MainWindowHandle -ne 0 })
+} while ($opened.Count -eq 0 -and (Get-Date) -lt $deadline)
+foreach ($process in $opened) { $process.CloseMainWindow() | Out-Null; if (-not $process.WaitForExit(15000)) { throw 'Updated fixture window did not close' } }
 $afterReport = Join-Path $env:RUNNER_TEMP 'native-upgrade-after.json'
 $result = Start-Process -FilePath $exe -ArgumentList @('--diagnostics-report', $afterReport) -WindowStyle Hidden -Wait -PassThru
 if ($result.ExitCode -ne 0) { throw 'Updated app launch failed' }

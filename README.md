@@ -55,6 +55,8 @@ The local server grants new accounts a free self-hosted plan. It preserves resou
 
 The separate desktop launcher starts the Docker stack and opens an isolated dashboard window. Build targets: Windows NSIS `.exe`, Linux `.AppImage`/`.deb`, macOS `.dmg`/`.zip`. Docker is still required. Database volumes, configuration and access permissions live outside the application package.
 
+Desktop 0.38.3 and newer automatically check for verified app updates and can install them directly in the launcher. Your local data and permissions are preserved. See [desktop updates](docs/DESKTOP.md#update-and-uninstall).
+
 ```sh
 node scripts/desktop-payload.mjs
 cd desktop-app

@@ -264,7 +264,7 @@ function renderUpdates() {
     ready: t("Update ready. Install now or let it install the next time you open the app (Linux requires a click).", "Update bereit. Jetzt installieren oder beim nächsten Öffnen der App installieren lassen (unter Linux per Klick)."),
     verifying: t("Verifying the update before installation…", "Update wird vor der Installation geprüft …"),
     installing: t("Installing and restarting the app…", "App wird installiert und neu gestartet …"),
-    error: t("Could not complete the update. Your installation is unchanged. Check again later.", "Update konnte nicht abgeschlossen werden. Deine Installation ist unverändert. Bitte später erneut prüfen."),
+    error: t("Could not complete the update. Your saved data is preserved. Check again later.", "Update konnte nicht abgeschlossen werden. Deine gespeicherten Daten bleiben erhalten. Bitte später erneut prüfen."),
     "preferences-error": t("Check your update preferences and re-enable automatic updates if desired.", "Prüfe deine Update-Einstellung und aktiviere die Automatik bei Bedarf erneut."),
   };
   text($("#app-update-status"), (labels[s.phase] ?? labels.idle) + (s.availableVersion ? " · " + s.availableVersion : ""));

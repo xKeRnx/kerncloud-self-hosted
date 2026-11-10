@@ -15,10 +15,10 @@ const files = [];
 for (const name of fs.readdirSync(directory).sort()) {
   if (!name.startsWith('KeRnCloud-' + version + '-')) continue;
   let platform, arch, format;
-  const match = name.match(/-(win|linux|mac)-(x64|arm64|amd64)\.(exe|deb|AppImage|zip)$/);
+  const match = name.match(/-(win|linux|mac)-(x64|arm64|amd64|x86_64)\.(exe|deb|AppImage|zip)$/);
   if (!match) continue;
   platform = {win: 'win32', linux: 'linux', mac: 'darwin'}[match[1]];
-  arch = match[2] === 'amd64' ? 'x64' : match[2]; format = match[3];
+  arch = ['amd64', 'x86_64'].includes(match[2]) ? 'x64' : match[2]; format = match[3];
   // macOS is published only from a signed/notarized release build, never from a local unsigned ZIP.
   if (platform === 'darwin' && process.env.KERNCLOUD_MAC_RELEASE_VERIFIED !== 'true') continue;
   const file = path.join(directory, name), stat = fs.lstatSync(file);

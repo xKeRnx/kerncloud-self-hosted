@@ -29,7 +29,7 @@ function verifyManifest(envelope, trust, {now = Date.now(), minimum = '0.0.0'} =
   for (const f of p.files) {
     const formats = {win32: ['exe'], linux: ['deb', 'AppImage'], darwin: ['zip']};
     if (!formats[f.platform]?.includes(f.format) || !['x64', 'arm64'].includes(f.arch) ||
-        typeof f.name !== 'string' || !/^KeRnCloud-[A-Za-z0-9.-]+$/.test(f.name) ||
+        typeof f.name !== 'string' || !/^KeRnCloud-[A-Za-z0-9._-]+$/.test(f.name) ||
         !f.name.startsWith('KeRnCloud-' + p.version + '-') || !f.name.endsWith('.' + f.format) ||
         f.url !== REPOSITORY + '/releases/download/v' + p.version + '/' + f.name ||
         !Number.isSafeInteger(f.bytes) || f.bytes < 1 || f.bytes > 1024 ** 3 ||
