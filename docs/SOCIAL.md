@@ -2,6 +2,10 @@
 
 Open **Projects → a project → Social inbox / Social analytics**. Configure an Ayrshare connection under Integrations and grant the project access. Writes must be enabled explicitly for replies. Existing credentials and grants are retained.
 
+![Exact reply review in the central Inbox](assets/social-review.png)
+
+Screenshots show the real interface with isolated UI fixtures, without live social accounts or paid provider calls.
+
 ## Limits before calls
 
 The shared **fixed external project budget** covers Content Studio, Research and Social. Set its total USD reservation ceiling and request count in Content Studio. New project budgets start at zero.
@@ -32,6 +36,8 @@ Direct-message replies support Facebook, Instagram and X. Comment replies use So
 Agents can read a compact cached index, load one item and save a reply for human review, then finish without waiting. They cannot approve, send or raise limits. Inbox text is untrusted source content. Cached analytics are available through the same read tool; no paid fetch is started by an agent read. Normal AI task token/credit limits still apply.
 
 ## Measure post performance
+
+![Cached post metrics and history](assets/social-analytics.png)
 
 Add an analytics source for one Ayrshare post ID and platform, then fetch manually. Each successful request stores a timestamped snapshot, showing a metric selector, history chart/table and CSV export. Repeated reads inside the cache window do not create another charge or snapshot.
 

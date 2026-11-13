@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "version": "0.43.0",
+  "images": {
+    "app": "ghcr.io/xkernx/kerncloud-self-hosted@sha256:ebc54af9fbe380507b8862dc53e9a5123268e731c6c48e8f9fdfcf44e1e89cfa",
+    "validator": "ghcr.io/xkernx/kerncloud-validator@sha256:61ed74040057251a9b3ddad67fdb924de984f4c9d437618af729ab70f7f511dd"
+  }
+}
