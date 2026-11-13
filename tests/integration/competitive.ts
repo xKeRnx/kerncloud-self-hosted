@@ -11,6 +11,7 @@ import { unzipSync, strFromU8 } from "fflate";
 import { tickQuality } from "../../src/server/quality.ts";
 import { decisionConsent, createDecision } from "../../src/server/decisions.ts";
 import { integrationGalleryTests } from "./integration-gallery.ts";
+import { socialTests } from "./social.ts";
 import { studioResearchTests } from "./studio-research.ts";
 export async function competitiveTests(t: any, { request, pool, admin }: any) {
   const owner = await request("auth/signup", {
@@ -510,6 +511,15 @@ export async function competitiveTests(t: any, { request, pool, admin }: any) {
     admin,
   });
   await studioResearchTests(t, {
+    request,
+    pool,
+    owner,
+    member,
+    ws,
+    agent,
+    foreignWorkspace: b.workspace.id,
+  });
+  await socialTests(t, {
     request,
     pool,
     owner,

@@ -41,8 +41,10 @@ You do not need `npm install` on the host for this source quick start. Windows a
 | Bridge / connectors | Deliberately authorized device and environment access                                                               |
 | Models / MCP        | Chat Completions, Responses and Anthropic Messages adapters, local models and approved tools                        |
 | Integrations        | Searchable service gallery, OAuth or encrypted provider tokens, project/agent grants and read-only connection tests |
-| Content Studio      | Private drafts, exact human publication reviews and bounded scheduled dispatch                                     |
+| Content Studio      | Private drafts, exact human publication reviews and bounded scheduled dispatch                                      |
 | Research            | Fixed search limits, reusable sources, compact agent context and versioned reports                                  |
+| Social inbox        | Cached messages/comments and exact human approval before each text reply                                            |
+| Social analytics    | Timestamped post metrics, history charts and CSV export without repeated-snapshot inflation                         |
 | Work modes          | Draft, single-agent execution or a team sharing one fixed budget                                                    |
 | Task workplace      | See environment activity, pause and take control, then hand back                                                    |
 | Project pages       | Versioned reports and dashboards with reviewed, expiring sharing links                                              |
@@ -64,6 +66,8 @@ See [the full integration catalog and setup guide](docs/INTEGRATIONS.md) for sup
 ![Content review in the central Inbox — isolated UI fixture](docs/assets/content-studio-review.png)
 
 Connect Ayrshare for social publishing, or Tavily, Brave Search or Exa for research. New external budgets start at zero. Confirm a current maximum provider price and fixed request/reservation limits before dispatch; also set provider-side spending caps. A submitted post is provider acceptance, not confirmed network delivery.
+
+Social inbox and post analytics add reviewed text replies, bounded manual fetches, timestamped post metrics and CSV export. See [the Social setup guide and limits](docs/SOCIAL.md).
 
 ## Self-hosting and the business model
 

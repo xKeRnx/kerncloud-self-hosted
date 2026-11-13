@@ -13,6 +13,7 @@ import { modeAllowsTool, workModeInstruction } from "../core/work-modes.ts";
 import { bridgeTools } from "../core/bridge.ts";
 import { bridgeToolStep, bridgeToolsFor } from "./bridge.ts";
 import { appToolStep } from "./work-apps.ts";
+import { socialTools } from "../core/social.ts";
 import { studioTools } from "../core/studio-research.ts";
 import {
   enforceProjectBudget,
@@ -93,6 +94,7 @@ export const builtinTools: {
   function: { name: string; description: string; parameters: any };
 }[] = [
   ...studioTools,
+  ...socialTools,
   {
     type: "function",
     function: {
@@ -979,6 +981,8 @@ export async function modelStep(
       );
     if (run.model_policy?.autonomy_version !== 1) {
       const lazy = new Set([
+        "read_social_inbox",
+        "save_social_reply",
         "save_content_draft",
         "read_research_job",
         "research_query",
@@ -1682,6 +1686,14 @@ export async function toolStep(
     return projectPageToolStep(taskId, lease, callId, args);
   if (name === "list_bridges" || name === "bridge_action")
     return bridgeToolStep(taskId, lease, callId, name, args);
+  if (["read_social_inbox", "save_social_reply"].includes(name))
+    return (await import("./social.ts")).socialAgentStep(
+      taskId,
+      lease,
+      callId,
+      name,
+      args,
+    );
   if (name === "app_action") return appToolStep(taskId, lease, callId, args);
   if (
     [

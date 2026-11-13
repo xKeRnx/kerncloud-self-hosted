@@ -44,4 +44,4 @@ AI assistance starts a normal task with explicit maximum total tokens and credit
 
 Backups include drafts, versions, sources, reports and cost receipts. The migration adds structures without replacing existing tables/credentials. Protocol/database fixtures cover zero/unknown budgets, concurrency, caching, project/role isolation, stale prices, changed connections, edited drafts, once-only dispatch and uncertain outcomes. Live account checks require the owner's configured services and explicit publication approval.
 
-This release starts the requested rollout with Content Studio and Research. Social inboxes, delivery analytics, further CRM/shop adapters and optional managed connector platforms remain separate expansion work.
+This release starts the requested rollout with Content Studio and Research. Social inbox and post analytics are available in the [Social guide](SOCIAL.md). Further CRM/shop adapters and optional managed connector platforms remain separate expansion work.

@@ -11,6 +11,7 @@ import { deliverNextMail } from "./mail.ts";
 import { syncInvoiceProfiles } from "./invoice-profile-sync.ts";
 import { importStripeEinvoice, processEinvoice } from "./einvoices.ts";
 import { housekeeping } from "./housekeeping.ts";
+import { expireSocialClaims } from "./social.ts";
 import { expireContentClaims } from "./content-research.ts";
 import {
   migrateBinaryBatch,
@@ -57,6 +58,7 @@ export async function scheduled(
 }
 const jobs: [string, number, () => Promise<unknown>][] = [
   ["content-recovery", 30000, expireContentClaims],
+  ["social-recovery", 30000, expireSocialClaims],
   ["automations", 5000, tickAutomations],
   ["briefings", 30000, tickBriefings],
   ["quality", 5000, tickQuality],

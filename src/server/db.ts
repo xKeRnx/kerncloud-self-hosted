@@ -323,6 +323,12 @@ export async function ensureDb() {
           "utf8",
         ),
       );
+      await c.query(
+        readFileSync(
+          join(process.cwd(), "src/server/migrations/038.sql"),
+          "utf8",
+        ),
+      );
       if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
         const existing = await c.query("SELECT id FROM users WHERE email=$1", [
           process.env.ADMIN_EMAIL.toLowerCase(),

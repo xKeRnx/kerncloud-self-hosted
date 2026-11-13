@@ -20,11 +20,11 @@ import { createRun, lockTask } from "./store.ts";
 const hash = (value: unknown) =>
   createHash("sha256").update(JSON.stringify(value)).digest("hex");
 const uid = z.string().uuid();
-async function manage(actor: string, workspace: string) {
+export async function manage(actor: string, workspace: string) {
   if (!["owner", "admin"].includes(await workspaceRole(actor, workspace)))
     throw new HttpError(403, "Workspace administration required");
 }
-async function connection(
+export async function connection(
   c: Pick<PoolClient, "query">,
   workspace: string,
   project: string,
@@ -55,15 +55,16 @@ async function price(c: PoolClient, project: string, id: string) {
     );
   return p;
 }
-async function reserve(
+export async function reserve(
   c: PoolClient,
   workspace: string,
   project: string,
   id: string,
   subject: string,
   expected?: any,
+  quoted?: { price_micro_usd: string | number; revision: number },
 ) {
-  const p = await price(c, project, id),
+  const p = quoted ?? (await price(c, project, id)),
     cost = Number(p.price_micro_usd);
   const budget = (
     await c.query(
@@ -93,7 +94,7 @@ async function reserve(
   );
   return { cost, receipt, budget, price: p };
 }
-async function active(
+export async function active(
   c: Pick<PoolClient, "query">,
   workspace: string,
   project: string,

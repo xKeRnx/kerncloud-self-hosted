@@ -1,4 +1,5 @@
 import { ensureDb, pool } from "./server/db.ts";
+import { dispatchSocialReply } from "./server/social.ts";
 import { dispatchContent } from "./server/content-research.ts";
 let stopping = false;
 process.on("SIGTERM", () => {
@@ -16,7 +17,7 @@ console.log("[Publisher] Approved content queue ready; no model calls.");
 while (!stopping) {
   await Promise.all(
     Array.from({ length: parallel }, () =>
-      dispatchContent().catch(() => {
+      Promise.all([dispatchContent(), dispatchSocialReply()]).catch(() => {
         console.error(
           "[Publisher] Claim failed; dispatch state retained for review.",
         );

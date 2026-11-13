@@ -296,7 +296,7 @@ export async function snapshot(
     decision_count: Number(
       (
         await pool.query(
-          "SELECT ((SELECT count(*) FROM tasks t JOIN runs r ON r.id=t.run_id WHERE t.workspace_id=$1 AND t.status='input_required' AND r.status NOT IN('completed','failed','canceled'))+(SELECT count(*) FROM content_posts WHERE workspace_id=$1 AND status='review'))::int n",
+          "SELECT ((SELECT count(*) FROM tasks t JOIN runs r ON r.id=t.run_id WHERE t.workspace_id=$1 AND t.status='input_required' AND r.status NOT IN('completed','failed','canceled'))+(SELECT count(*) FROM content_posts WHERE workspace_id=$1 AND status='review')+(SELECT count(*) FROM social_replies WHERE workspace_id=$1 AND status='review'))::int n",
           [workspace.id],
         )
       ).rows[0].n,

@@ -161,6 +161,8 @@ export function ProjectContext({ state }: { state: Snapshot }) {
           ["projects", t("Übersicht", "Overview")],
           ["tasks", t("Aufträge", "Tasks")],
           ["files", t("Ergebnisse & Dateien", "Results & files")],
+          ["social", t("Social-Postfach", "Social inbox")],
+          ["socialAnalytics", t("Social-Auswertungen", "Social analytics")],
           ["studio", t("Content-Studio", "Content Studio")],
           ["research", t("Recherche", "Research")],
           ["memory", t("Wissen", "Knowledge")],

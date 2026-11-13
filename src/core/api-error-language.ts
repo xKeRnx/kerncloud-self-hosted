@@ -2,6 +2,45 @@ import { uiMessage } from "./ui-messages";
 import type { Locale } from "./languages";
 // Exact application-owned messages only; never return arbitrary provider errors.
 const studioErrors: Record<string, string> = {
+  "A dispatched reply cannot be changed or repeated":
+    "Eine versendete Antwort kann nicht geändert oder wiederholt werden.",
+  "A reply already exists; review its current status before continuing":
+    "A reply already exists; review its current status before continuing",
+  "A social fetch is already running": "A social fetch is already running",
+  "Choose an Ayrshare connection": "Choose an Ayrshare connection",
+  "Confirm a ceiling valid for at most 31 days":
+    "Bitte eine Preisobergrenze mit höchstens 31 Tagen Gültigkeit bestätigen.",
+  "Confirm a current social read/reply price ceiling first":
+    "Bitte zuerst eine aktuelle Preisobergrenze für Social-Abrufe bzw. Antworten bestätigen.",
+  "Connection, price or budget changed since preview. Reload and review again":
+    "Verbindung, Preis oder Budget wurden seit der Vorschau geändert. Bitte neu laden und erneut prüfen.",
+  "Enable publishing on the assigned Ayrshare connection first":
+    "Bitte zuerst Veröffentlichungen für die zugeordnete Ayrshare-Verbindung erlauben.",
+  "Maximum 100 social sources per project":
+    "Maximum 100 social sources per project",
+  "No continuation is available; refresh the first page":
+    "No continuation is available; refresh the first page",
+  "Operation already started": "Dieser Vorgang wurde bereits gestartet.",
+  "Reply approval is stale; review the current item and exact reply again":
+    "Die Antwortfreigabe ist veraltet. Bitte den aktuellen Eintrag und den genauen Antworttext erneut prüfen.",
+  "Reply changed; reload the exact preview":
+    "Die Antwort wurde geändert. Bitte die aktuelle Vorschau laden.",
+  "Review and explicitly confirm this exact reply first":
+    "Review and explicitly confirm this exact reply first",
+  "Set a sufficient fixed external budget first":
+    "Bitte zuerst ein ausreichendes festes externes Projektbudget und Anfragelimit festlegen.",
+  "Social fetch outcome uncertain; explicitly confirm a new paid read attempt":
+    "Der Ausgang des Abrufs ist unklar. Bitte einen neuen, zusätzlich reservierten Leseversuch ausdrücklich bestätigen.",
+  "Social item unavailable in this project":
+    "Social item unavailable in this project",
+  "Social source unavailable": "Social source unavailable",
+  "The conversation changed; review the newest incoming message":
+    "Die Unterhaltung wurde geändert. Bitte die neueste eingegangene Nachricht prüfen.",
+  "The incoming item changed; reload before drafting":
+    "The incoming item changed; reload before drafting",
+  "This item cannot receive a reply": "This item cannot receive a reply",
+  "This social fetch already started; inspect its receipt":
+    "This social fetch already started; inspect its receipt",
   "Workspace administration required": "Workspace-Administration erforderlich.",
   "Connection is not granted to this project/agent":
     "Diese Verbindung ist für dieses Projekt bzw. diesen Agenten nicht freigegeben.",
@@ -15,20 +54,12 @@ const studioErrors: Record<string, string> = {
     "Projekt oder Workspace sind pausiert.",
   "New limits cannot be lower than committed reservations":
     "Neue Limits dürfen nicht unter bereits reservierten Kosten oder Anfragen liegen.",
-  "Confirm a ceiling valid for at most 31 days":
-    "Bitte eine Preisobergrenze mit höchstens 31 Tagen Gültigkeit bestätigen.",
   "Post changed; reload its exact preview":
     "Der Beitrag wurde geändert. Bitte die aktuelle Vorschau neu laden.",
   "A dispatched post cannot be changed or automatically repeated":
     "Ein versendeter Beitrag kann nicht geändert oder automatisch wiederholt werden.",
   "Review and explicitly approve this exact post first":
     "Bitte zuerst genau diesen Beitrag prüfen und ausdrücklich freigeben.",
-  "Enable publishing on the assigned Ayrshare connection first":
-    "Bitte zuerst Veröffentlichungen für die zugeordnete Ayrshare-Verbindung erlauben.",
-  "Set a sufficient fixed external budget first":
-    "Bitte zuerst ein ausreichendes festes externes Projektbudget und Anfragelimit festlegen.",
-  "Connection, price or budget changed since preview. Reload and review again":
-    "Verbindung, Preis oder Budget wurden seit der Vorschau geändert. Bitte neu laden und erneut prüfen.",
   "The price ceiling must cover the scheduled publication":
     "Die Preisbestätigung muss bis nach dem geplanten Veröffentlichungszeitpunkt gültig sein.",
   "An Ayrshare connection is required":
@@ -57,7 +88,6 @@ const studioErrors: Record<string, string> = {
     "Eine Veröffentlichungsverbindung ist erforderlich.",
   "Set sufficient fixed project/notebook budgets before starting AI research, or summarize existing sources only":
     "Bitte vor der KI-Recherche ausreichende feste Projekt- und Recherchelimits festlegen oder nur vorhandene Quellen zusammenfassen.",
-  "Operation already started": "Dieser Vorgang wurde bereits gestartet.",
 };
 export function apiErrorMessage(
   locale: Locale,

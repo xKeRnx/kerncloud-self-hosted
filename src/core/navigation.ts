@@ -8,6 +8,8 @@ export const workspacePaths = {
   projectSettings: "/project-settings",
   worklog: "/worklog",
   apps: "/apps",
+  social: "/social",
+  socialAnalytics: "/social-analytics",
   studio: "/studio",
   research: "/research",
   projects: "/projects",
@@ -52,15 +54,17 @@ export function resolveWorkspacePath(pathname: string): {
     if (path === value) return { view: view as WorkspaceView };
   }
   const subproject =
-    /^\/projects\/([a-zA-Z0-9_-]{1,100})\/(tasks|chat|files|memory|knowledge|timeline|routines|environments|settings|studio|research)$/.exec(
+    /^\/projects\/([a-zA-Z0-9_-]{1,100})\/(tasks|chat|files|memory|knowledge|timeline|routines|environments|settings|studio|research|social|social-analytics)$/.exec(
       path,
     );
   if (subproject)
     return {
       view:
-        subproject[2] === "settings"
-          ? "projectSettings"
-          : (subproject[2] as WorkspaceView),
+        subproject[2] === "social-analytics"
+          ? "socialAnalytics"
+          : subproject[2] === "settings"
+            ? "projectSettings"
+            : (subproject[2] as WorkspaceView),
       projectId: subproject[1],
     };
   const agent = /^\/agents\/([a-zA-Z0-9_-]{1,100})$/.exec(path);
@@ -77,6 +81,8 @@ export function resolveWorkspacePath(pathname: string): {
 }
 
 export const projectViews: WorkspaceView[] = [
+  "social",
+  "socialAnalytics",
   "studio",
   "research",
   "projects",
@@ -94,7 +100,13 @@ export function projectPath(project: string, view: WorkspaceView = "projects") {
   const prefix = "/projects/" + encodeURIComponent(project);
   return view === "projects"
     ? prefix
-    : prefix + "/" + (view === "projectSettings" ? "settings" : view);
+    : prefix +
+        "/" +
+        (view === "projectSettings"
+          ? "settings"
+          : view === "socialAnalytics"
+            ? "social-analytics"
+            : view);
 }
 export const adminGroups = [
   {

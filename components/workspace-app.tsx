@@ -20,6 +20,7 @@ import {
   OrganisationChart,
 } from "./organisation-suite";
 import { WorkAppsPanel, ProjectsPanel, QualityPanel } from "./workspace-suite";
+import { SocialPanel } from "./social-panel";
 import { ContentResearch } from "./content-research";
 import {
   TeamPanel,
@@ -185,6 +186,8 @@ const labels: Record<string, string> = {
   suspended: "Gesperrt",
 };
 const viewLabels: Record<View, string> = {
+  social: "Social inbox",
+  socialAnalytics: "Social analytics",
   studio: "Content Studio",
   research: "Research",
   work: "Alle Aufträge",
@@ -1335,6 +1338,11 @@ export function WorkspaceApp({
                       {
                         overview: t("Start", "Home"),
                         apps: t("Integrationen", "Integrations"),
+                        social: t("Social-Postfach", "Social inbox"),
+                        socialAnalytics: t(
+                          "Social-Auswertungen",
+                          "Social analytics",
+                        ),
                         studio: t("Content-Studio", "Content Studio"),
                         research: t("Recherche-Zentrale", "Research"),
                         work: t("Alle Aufträge", "All tasks"),
@@ -1515,6 +1523,14 @@ export function WorkspaceApp({
               <ProjectContext state={s} />
             )}
           {view === "settings" && <SettingsHub state={s} />}
+          {(view === "social" || view === "socialAnalytics") && (
+            <SocialPanel
+              key={s.workspace.id + ":" + s.workspace.project_id + ":" + view}
+              workspaceId={s.workspace.id}
+              projectId={s.workspace.project_id!}
+              analytics={view === "socialAnalytics"}
+            />
+          )}
           {(view === "studio" || view === "research") && (
             <ContentResearch
               key={s.workspace.id + ":" + s.workspace.project_id + ":" + view}

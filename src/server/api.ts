@@ -46,6 +46,7 @@ import {
   adminWorkApps,
 } from "./work-apps.ts";
 import { projects } from "./projects.ts";
+import { socialSnapshot, socialAction, socialReviews } from "./social.ts";
 import {
   studioSnapshot,
   studioAction,
@@ -706,7 +707,7 @@ export async function handle(req: NextRequest, path: string) {
       return NextResponse.json({
         status: "ok",
         service: "kerncloud",
-        version: "0.42.0",
+        version: "0.43.0",
         edition: selfHostedEdition ? "self-hosted" : "operator",
       });
     if (path === "billing/webhook" && req.method === "POST")
@@ -1241,6 +1242,26 @@ export async function handle(req: NextRequest, path: string) {
       return NextResponse.json(
         await checkIntegration(user.id, workspace.id, body),
       );
+    if (path === "social" && method === "GET")
+      return NextResponse.json(
+        await socialSnapshot(user.id, workspace.id, workspace.project_id!),
+      );
+    if (path === "social/action" && method === "POST")
+      return NextResponse.json(
+        await socialAction(user.id, workspace.id, workspace.project_id!, body),
+      );
+    if (path === "social/reviews" && method === "GET")
+      return NextResponse.json(await socialReviews(user.id, workspace.id));
+    if (path === "social/review-action" && method === "POST") {
+      const b = z
+        .object({ project_id: z.string().uuid() })
+        .passthrough()
+        .parse(body);
+      const { project_id, ...action } = b;
+      return NextResponse.json(
+        await socialAction(user.id, workspace.id, project_id, action),
+      );
+    }
     if (path === "studio" && method === "GET")
       return NextResponse.json(
         await studioSnapshot(user.id, workspace.id, workspace.project_id!),
