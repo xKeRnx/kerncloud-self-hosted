@@ -45,6 +45,7 @@ export function workspacePermission(
   if (path === "decisions/respond")
     return (body as { choice?: string })?.choice !== "approve";
   return (
+    path === "project-pages" ||
     path === "suite/plan" ||
     path === "suite/templates" ||
     path === "briefings/refresh" ||

@@ -1,4 +1,9 @@
 import fs from "node:fs";
+import {
+  readDeployment,
+  writeDeployment,
+  assertRollbackSchema,
+} from "./deployment-state.mjs";
 import { imageDistribution } from "./image-distribution.mjs";
 import { ensureLocalNetworks, networkSettings } from "./local-network.mjs";
 import path from "node:path";
@@ -80,7 +85,7 @@ export function prepare(root = projectRoot, options = {}) {
     KERNCLOUD_PORT: String(port),
     KERNCLOUD_GATEWAY_PORT: String(gatewayPort),
     KERNCLOUD_DB_NAME: database,
-    KERNCLOUD_IMAGE: "kerncloud-selfhost:0.39.0",
+    KERNCLOUD_IMAGE: "kerncloud-selfhost:0.40.0",
     KERNCLOUD_BIND_ADDRESS: "127.0.0.1",
     POSTGRES_PASSWORD: password,
     DATABASE_URL:
@@ -106,11 +111,32 @@ export function prepare(root = projectRoot, options = {}) {
   return { created: true, config };
 }
 export function currentImage(root = projectRoot) {
-  return imageDistribution(root, fs.existsSync(path.join(root,".env")) ? fs.existsSync(path.join(root,".env")) ? parseEnv(fs.readFileSync(path.join(root,".env"),"utf8")) : {} : {}).app;
+  const override = readDeployment(root, ".local-rollback-active.json");
+  return (
+    override?.app ??
+    imageDistribution(
+      root,
+      fs.existsSync(path.join(root, ".env"))
+        ? parseEnv(fs.readFileSync(path.join(root, ".env"), "utf8"))
+        : {},
+    ).app
+  );
 }
 function imageEnvironment(root) {
-  const distribution = imageDistribution(root, fs.existsSync(path.join(root,".env")) ? parseEnv(fs.readFileSync(path.join(root,".env"),"utf8")) : {});
-  return {...process.env, KERNCLOUD_IMAGE:distribution.app, KERNCLOUD_VALIDATOR_IMAGE:distribution.validator};
+  const override = readDeployment(root, ".local-rollback-active.json");
+  const distribution =
+    override ??
+    imageDistribution(
+      root,
+      fs.existsSync(path.join(root, ".env"))
+        ? parseEnv(fs.readFileSync(path.join(root, ".env"), "utf8"))
+        : {},
+    );
+  return {
+    ...process.env,
+    KERNCLOUD_IMAGE: distribution.app,
+    KERNCLOUD_VALIDATOR_IMAGE: distribution.validator,
+  };
 }
 export function configureNetwork(root, input) {
   const config = prepare(root).config,
@@ -235,7 +261,7 @@ export async function main(
   process.chdir(root);
   if (command === "help") {
     console.log(
-      "KeRnCloud local: init | doctor | start | stop | status | logs | backup | update\ninit options: --port 3100 --gateway-port 3200 --email you@example.com\nCredentials: ADMIN_EMAIL and ADMIN_PASSWORD in the private .env file.",
+      "KeRnCloud local: init | doctor | start | stop | status | logs | backup | update | rollback\ninit options: --port 3100 --gateway-port 3200 --email you@example.com\nCredentials: ADMIN_EMAIL and ADMIN_PASSWORD in the private .env file.",
     );
     return;
   }
@@ -249,6 +275,7 @@ export async function main(
       "logs",
       "backup",
       "update",
+      "rollback",
     ].includes(command)
   )
     throw Error("Unknown command");
@@ -285,8 +312,18 @@ export async function main(
     ensureLocalNetworks(root, config);
     report({ phase: "build" });
     if (!(await imagesAvailable(root, config))) {
-      if (imageDistribution(root, config).mode === "registry") await compose("pull", "postgres");
-      if (imageDistribution(root, config).mode === "registry") await compose("pull", "app", "worker", "scheduler", "gateway", "object-storage", "artifact-validator");
+      if (imageDistribution(root, config).mode === "registry")
+        await compose("pull", "postgres");
+      if (imageDistribution(root, config).mode === "registry")
+        await compose(
+          "pull",
+          "app",
+          "worker",
+          "scheduler",
+          "gateway",
+          "object-storage",
+          "artifact-validator",
+        );
       else await compose("--progress", "plain", "build");
     } else {
       report({ phase: "build", reusedImages: true });
@@ -327,6 +364,75 @@ export async function main(
     report({ phase: "backup" });
     await backup(root, config);
   }
+  const migrations = async () => {
+    const r = await captureDocker(
+      dockerArgs(
+        config,
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "kerncloud",
+        "-d",
+        config.KERNCLOUD_DB_NAME,
+        "-t",
+        "-A",
+        "-c",
+        "SELECT string_agg(version::text,',' ORDER BY version) FROM schema_migrations;",
+      ),
+      root,
+    );
+    if (r.status !== 0 || !/^\d+(?:,\d+)*$/.test(r.stdout.trim()))
+      throw Error(
+        "Cannot verify the database schema; update/rollback was not started.",
+      );
+    return r.stdout.trim();
+  };
+  if (command === "rollback") {
+    const saved = readDeployment(root, ".local-rollback.json");
+    if (!saved) throw Error("No compatible local image checkpoint exists.");
+    assertRollbackSchema(saved, await migrations());
+    const active = await captureDocker(
+      dockerArgs(
+        config,
+        "exec",
+        "-T",
+        "postgres",
+        "psql",
+        "-U",
+        "kerncloud",
+        "-d",
+        config.KERNCLOUD_DB_NAME,
+        "-t",
+        "-A",
+        "-c",
+        "SELECT count(*) FROM runs WHERE status NOT IN ('completed','failed','canceled');",
+      ),
+      root,
+    );
+    if (active.status !== 0 || active.stdout.trim() !== "0")
+      throw Error("Finish or cancel unfinished tasks before rollback.");
+    await runDocker(
+      ["image", "inspect", saved.app, saved.validator, "--format", "{{.Id}}"],
+      root,
+    );
+    await backup(root, config);
+    writeDeployment(root, ".local-rollback-active.json", saved);
+    await compose(
+      "up",
+      "-d",
+      "--no-build",
+      "--pull",
+      "never",
+      "--scale",
+      "worker=2",
+    );
+    await waitForHealth(config.KERNCLOUD_PORT, 300000, report);
+    console.log(
+      "Previous images restored. Database, configuration and permissions were retained.",
+    );
+  }
   if (command === "update") {
     report({ phase: "update-check" });
     const r = await captureDocker(
@@ -348,15 +454,50 @@ export async function main(
       root,
     );
     if (r.status !== 0 || r.stdout.trim() !== "0")
-      throw Error("Pause/finish running tasks first. Update has not started.");
+      throw Error(
+        "Finish or cancel unfinished tasks first. Update has not started.",
+      );
     report({ phase: "backup" });
     await backup(root, config);
+    const previous = { schema: 1, migrations: await migrations() };
+    for (const [key, service] of [
+      ["app", "app"],
+      ["validator", "artifact-validator"],
+    ]) {
+      const containers = await captureDocker(
+        dockerArgs(config, "ps", "--all", "--quiet", service),
+        root,
+      );
+      const id = containers.stdout.trim();
+      if (containers.status !== 0 || !/^[a-f0-9]{12,64}$/.test(id))
+        throw Error(
+          "Cannot preserve the running image checkpoint. Update was not started.",
+        );
+      const inspected = await captureDocker(
+        ["inspect", id, "--format", "{{.Image}}"],
+        root,
+      );
+      if (inspected.status !== 0) throw Error("Image checkpoint unavailable");
+      previous[key] = inspected.stdout.trim();
+    }
+    writeDeployment(root, ".local-rollback.json", previous);
+    fs.rmSync(path.join(root, ".local-rollback-active.json"), { force: true });
     report({ phase: "prepare" });
     ensureLocalNetworks(root, config);
     report({ phase: "build" });
-    if (imageDistribution(root, config).mode === "registry") await compose("pull", "postgres");
-      if (imageDistribution(root, config).mode === "registry") await compose("pull", "app", "worker", "scheduler", "gateway", "object-storage", "artifact-validator");
-      else await compose("--progress", "plain", "build");
+    if (imageDistribution(root, config).mode === "registry")
+      await compose("pull", "postgres");
+    if (imageDistribution(root, config).mode === "registry")
+      await compose(
+        "pull",
+        "app",
+        "worker",
+        "scheduler",
+        "gateway",
+        "object-storage",
+        "artifact-validator",
+      );
+    else await compose("--progress", "plain", "build");
     report({ phase: "services" });
     await compose(
       "up",

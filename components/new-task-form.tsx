@@ -94,6 +94,7 @@ export function NewTaskForm({
         "runs",
         {
           goal: prompt,
+          workMode: f.get("workMode"),
           projectId: project,
           agentId: f.get("agentId"),
           attachmentIds: f.getAll("attachments"),
@@ -118,6 +119,26 @@ export function NewTaskForm({
           "Describe the goal, review the project and budget, then start.",
         )}
       </p>
+      <label className="field">
+        <span>{t("Arbeitsweise", "Work mode")}</span>
+        <select name="workMode" defaultValue="execute">
+          <option value="draft">
+            {t(
+              "Entwurf · lokale Ergebnisse zur Prüfung",
+              "Draft · local results for review",
+            )}
+          </option>
+          <option value="execute">
+            {t("Umsetzen · ein Agent", "Execute · one agent")}
+          </option>
+          <option value="team">
+            {t(
+              "Team · gemeinsames festes Budget",
+              "Team · shared fixed budget",
+            )}
+          </option>
+        </select>
+      </label>
       <label className="field">
         <span>{t("Projekt dieses Auftrags", "Project for this task")}</span>
         <select

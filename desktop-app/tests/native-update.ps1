@@ -48,6 +48,8 @@ if ($result.ExitCode -ne 0) { throw 'Updated app launch failed' }
 $report = Get-Content -LiteralPath $afterReport -Raw | ConvertFrom-Json
 if (-not $report.ok -or $report.version -ne $expected -or -not $report.rendererLoaded) { throw 'Updated app verification failed' }
 if ((Get-FileHash -LiteralPath $configuration).Hash -ne $before -or (Get-FileHash -LiteralPath $grants).Hash -ne $grantsBefore) { throw 'Runtime configuration or grants changed' }
+node (Join-Path $env:GITHUB_WORKSPACE 'desktop-app/tests/remote-launch.cjs') $exe
+if ($LASTEXITCODE -ne 0) { throw 'Existing-server client mode smoke test failed' }
 $uninstaller = Join-Path $fixtureRoot 'Uninstall KeRnCloud.exe'
 $result = Start-Process -FilePath $uninstaller -ArgumentList '/S' -WindowStyle Hidden -Wait -PassThru
 if ($result.ExitCode -ne 0) { throw 'Test uninstall failed' }

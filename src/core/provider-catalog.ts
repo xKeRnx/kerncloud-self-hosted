@@ -41,8 +41,8 @@ export function parseProviderCatalog(
     }
     seen.add(id);
     const name =
-      typeof entry.name === "string"
-        ? entry.name
+      typeof (entry.name ?? entry.display_name) === "string"
+        ? (entry.name ?? entry.display_name)
             .replace(/[\u0000-\u001f\u007f]/g, " ")
             .trim()
             .slice(0, 200) || id

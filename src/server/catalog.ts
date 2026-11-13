@@ -27,7 +27,7 @@ import {
   defaultOutputTokens,
 } from "../core/model-limits.ts";
 const fields =
-  "id,workspace_id,name,provider_name,endpoint,model,input_rate::float8,output_rate::float8,base_credits,active,streaming,max_output_tokens,request_timeout_seconds,reasoning_effort,auto_reasoning_effort,context_window_tokens,monitor_enabled,checked_at,check_status,capabilities,pricing_config";
+  "engine_kind,id,workspace_id,name,provider_name,endpoint,model,input_rate::float8,output_rate::float8,base_credits,active,streaming,max_output_tokens,request_timeout_seconds,reasoning_effort,auto_reasoning_effort,context_window_tokens,monitor_enabled,checked_at,check_status,capabilities,pricing_config";
 export async function listModels(
   workspaceId?: string,
   admin = false,
@@ -77,6 +77,9 @@ export async function saveModel(
     output_rate: z.number().min(0).max(1000000).default(1000),
     base_credits: z.number().int().min(0).max(1000000).default(0),
     streaming: z.boolean().default(true),
+    engine_kind: z
+      .enum(["openai-chat", "openai-responses", "anthropic"])
+      .optional(),
     detect_capabilities: z.boolean().optional(),
     max_output_tokens: z.number().int().min(1).max(maxOutputTokens).optional(),
     active: z.boolean().default(true),
@@ -128,7 +131,12 @@ export async function saveModel(
   const credential = await discoveryCredential(workspaceId, input);
   const detected =
     input.detect_capabilities || input.pricing_config?.mode === "catalog"
-      ? await inspectModel(input.endpoint, input.model, credential.key)
+      ? await inspectModel(
+          input.endpoint,
+          input.model,
+          credential.key,
+          input.engine_kind ?? credential.old?.engine_kind ?? "openai-chat",
+        )
       : null;
   let config: ModelTariffConfig | null = input.pricing_config ?? null;
   if (config?.mode === "catalog") {
@@ -228,6 +236,7 @@ export async function saveModel(
     const sameModel =
       existing?.endpoint === input.endpoint.replace(/\/$/, "") &&
       existing?.model === input.model &&
+      (!input.engine_kind || existing.engine_kind === input.engine_kind) &&
       (input.key === undefined || input.key === decrypt(existing.secret));
     const capabilities =
       detected?.status === "available"
@@ -267,6 +276,13 @@ export async function saveModel(
         400,
         "Der Anbieter meldet keine erlaubten Denkstufen. Bitte Anbietervorgabe wählen oder die Angaben ausdrücklich manuell bestätigen.",
       );
+    const engineKind =
+      input.engine_kind ?? existing?.engine_kind ?? "openai-chat";
+    if (engineKind === "anthropic" && selectedEffort !== "provider_default")
+      throw new HttpError(
+        400,
+        "The Anthropic adapter currently uses provider-default reasoning. Choose Provider default before saving.",
+      );
     const secret =
       input.key !== undefined
         ? encrypt(input.key)
@@ -296,6 +312,10 @@ export async function saveModel(
           "provider_default",
       ],
     );
+    await c.query("UPDATE model_offerings SET engine_kind=$2 WHERE id=$1", [
+      modelId,
+      engineKind,
+    ]);
     await c.query(
       "UPDATE model_offerings SET monitor_enabled=$2,checked_at=CASE WHEN $3::text IS NULL THEN NULL ELSE now() END,check_status=COALESCE($3,'unknown') WHERE id=$1",
       [modelId, input.monitor_enabled, detected?.status ?? null],

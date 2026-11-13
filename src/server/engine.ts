@@ -1,3 +1,14 @@
+import {
+  projectPageTool,
+  projectPageToolStep,
+  projectPagesReadTool,
+  projectPagesListStep,
+} from "./project-pages.ts";
+import {
+  engineRequest,
+  normalizeEngineResponse,
+} from "../core/inference-engine.ts";
+import { modeAllowsTool, workModeInstruction } from "../core/work-modes.ts";
 import { bridgeTools } from "../core/bridge.ts";
 import { bridgeToolStep, bridgeToolsFor } from "./bridge.ts";
 import { appToolStep } from "./work-apps.ts";
@@ -835,6 +846,8 @@ export async function context(taskId: string, lease: string) {
     task: initial.task,
     system:
       system +
+      workModeInstruction(initial.run.model_policy?.work_mode) +
+      "\nFor durable private reports and dashboards use save_project_page from the tool catalog. It versions an existing artifact without creating a new task or granting public access.\n" +
       bridgeGuidance +
       "\nMCP-Werkzeugindex: " +
       JSON.stringify(
@@ -849,6 +862,8 @@ export async function context(taskId: string, lease: string) {
         : "\nAutonomer Ablauf: Liefere kompakte vollständige Dateien, prüfe sie mit validate_artifact, korrigiere echte Befunde mit patch_artifact und prüfe erneut. validate_artifact benötigt keine gebuchte Umgebung. Lege dafür keine neue Aufgabe an und frage nicht den Nutzer nach gewöhnlichen Programmfehlern. Plane passende assert_*-Erwartungen für die verlangten Funktionen. Nach erfolgreicher Prüfung propose_skill und finish_task in einer Antwort verwenden. Weitere Werkzeuge bei Bedarf mit tool_catalog(names=[...]) laden. Kontext wird automatisch aus Originalbelegen verkürzt; keine manuelle Fortsetzung nötig. Fehler selbst beheben: Lies konkrete Werkzeugfehler und korrigiere Parameter anhand des Schemas. Nach Versionskonflikten erneut lesen. Falls list_environments leer ist, existiert keine freigegebene Umgebung; versuche keine erfundenen IDs oder Dateipfade. Erstelle eigenständige HTML-/Textdateien dann direkt mit save_artifact. Speichere große Ergebnisse in mehreren vollständigen Dateien. Wechsle bei einem gescheiterten Ansatz zu einem erlaubten anderen Weg. Bereits angestoßene externe Aktionen mit unklarem Ergebnis niemals erneut ausführen; erst Zustand prüfen oder Nutzer um Prüfung bitten. Das Auftragsbudget und vorhandene Berechtigungen bleiben verbindlich."),
     tools: [
       ...builtinTools,
+      projectPageTool,
+      projectPagesReadTool,
       ...(hasBridge ? bridgeTools : []),
       ...environmentTools,
       ...mcpTools,
@@ -978,6 +993,9 @@ export async function modelStep(
         (t) => !lazy.has(t.function.name) || loaded.has(t.function.name),
       );
     }
+    tools = tools.filter((t: any) =>
+      modeAllowsTool(run.model_policy?.work_mode, t.function.name),
+    );
     if ((run.model_policy as any)?.autonomy_version === 1)
       tools =
         (run.model_policy as any).delivery_bundle &&
@@ -1136,13 +1154,37 @@ export async function modelStep(
     const basis = inputBasis(
       prepared.messages,
       tools,
-      provider.id + ":" + provider.model,
+      provider.id +
+        ":" +
+        provider.model +
+        ":" +
+        (provider.engine_kind ?? "openai-chat"),
     );
-    if (autonomous)
+    if (
+      autonomous &&
+      (!provider.engine_kind || provider.engine_kind === "openai-chat")
+    )
       prepared.estimatedInput = measuredInputBound(
         task.context_state?.measured_input as any,
         basis,
         prepared.estimatedInput,
+      );
+    if (provider.engine_kind && provider.engine_kind !== "openai-chat")
+      prepared.estimatedInput = Math.max(
+        prepared.estimatedInput,
+        Buffer.byteLength(
+          JSON.stringify(
+            engineRequest(provider.engine_kind, {
+              model: provider.model,
+              messages: prepared.messages,
+              tools,
+              output: 1,
+              secret: "",
+              stream: false,
+              reasoning: {},
+            }).body,
+          ),
+        ),
       );
     Object.assign(prepared.state, {
       byte_input_upper_bound: prepared.state.estimated_input_upper_bound,
@@ -1165,6 +1207,9 @@ export async function modelStep(
         : prepared.outputTokens;
     prepared.outputTokens = Math.min(
       prepared.outputTokens,
+      provider.context_window_tokens
+        ? provider.context_window_tokens - prepared.estimatedInput - 512
+        : Infinity,
       (run.token_limit ?? 100000) -
         Number(budgetSpent.tokens) -
         prepared.estimatedInput,
@@ -1379,34 +1424,26 @@ export async function modelStep(
   try {
     control.signal.throwIfAborted();
     const endpoint = await networkEndpoint(data.provider.endpoint);
+    const engine = engineRequest(data.provider.engine_kind ?? "openai-chat", {
+      model: data.provider.model,
+      messages: data.effectiveMessages,
+      tools,
+      output: data.outputLimit,
+      secret: data.provider.secret,
+      stream: data.provider.streaming !== false,
+      reasoning: providerReasoning(
+        data.provider.endpoint,
+        data.provider.reasoning_effort,
+        data.provider.auto_reasoning_effort,
+      ),
+    });
     const response = await fetch(
-      `${endpoint.toString().replace(/\/$/, "")}/chat/completions`,
+      endpoint.toString().replace(/\/$/, "") + engine.path,
       {
         method: "POST",
         redirect: "error",
-        headers: {
-          "Content-Type": "application/json",
-          ...(data.provider.secret
-            ? { Authorization: `Bearer ${data.provider.secret}` }
-            : {}),
-        },
-        body: JSON.stringify({
-          model: data.provider.model,
-          messages: data.effectiveMessages.map(
-            ({ recovery_code, ...message }: Message) => message,
-          ),
-          tools,
-          parallel_tool_calls: false,
-          max_completion_tokens: data.outputLimit,
-          ...providerReasoning(
-            data.provider.endpoint,
-            data.provider.reasoning_effort,
-            data.provider.auto_reasoning_effort,
-          ),
-          ...(data.provider.streaming === false
-            ? {}
-            : { stream: true, stream_options: { include_usage: true } }),
-        }),
+        headers: engine.headers,
+        body: JSON.stringify(engine.body),
         signal: AbortSignal.any([
           control.signal,
           timeout,
@@ -1446,15 +1483,25 @@ export async function modelStep(
         },
       );
     }
-    const json = await readModelResponse(response, async (text) => {
-        await transaction(async (c) => {
-          const { task } = await lockTask(c, taskId, lease);
-          await c.query(
-            "INSERT INTO model_deltas(workspace_id,run_id,task_id,agent_id,call_id,content) VALUES($1,$2,$3,$4,$5,$6)",
-            [task.workspace_id, task.run_id, task.id, task.agent_id, id, text],
-          );
-        });
-      }),
+    const json = normalizeEngineResponse(
+        data.provider.engine_kind ?? "openai-chat",
+        await readModelResponse(response, async (text) => {
+          await transaction(async (c) => {
+            const { task } = await lockTask(c, taskId, lease);
+            await c.query(
+              "INSERT INTO model_deltas(workspace_id,run_id,task_id,agent_id,call_id,content) VALUES($1,$2,$3,$4,$5,$6)",
+              [
+                task.workspace_id,
+                task.run_id,
+                task.id,
+                task.agent_id,
+                id,
+                text,
+              ],
+            );
+          });
+        }),
+      ),
       message = json.choices?.[0]?.message as Message | undefined;
     if (!message || message.role !== "assistant")
       throw new HttpError(
@@ -1590,6 +1637,12 @@ export async function toolStep(
   const operationId = `${taskId}:${callId}`;
   await transaction(async (c) => {
     const { task, run } = await lockTask(c, taskId, lease);
+    if (!modeAllowsTool(run.model_policy?.work_mode, name))
+      throw new HttpError(
+        403,
+        "This tool is disabled by the task work mode. No action executed.",
+      );
+
     const handoff = await contextHandoff(c, task, run);
     if (handoff && !handoff.allowed_tools.includes(name as never))
       throw new HttpError(
@@ -1615,6 +1668,9 @@ export async function toolStep(
       409,
       "Werkzeugaufruf unterbrochen. Ergebnis muss vor einer Wiederholung geprüft werden.",
     );
+  if (name === "list_project_pages") return projectPagesListStep(taskId, lease);
+  if (name === "save_project_page")
+    return projectPageToolStep(taskId, lease, callId, args);
   if (name === "list_bridges" || name === "bridge_action")
     return bridgeToolStep(taskId, lease, callId, name, args);
   if (name === "app_action") return appToolStep(taskId, lease, callId, args);
@@ -1780,7 +1836,13 @@ export async function toolStep(
         .object({ query: z.string().trim().min(1).max(500) })
         .strict()
         .parse(args);
-      result = await authorizedToolSearch(c, task, mapping, query);
+      result = await authorizedToolSearch(
+        c,
+        task,
+        mapping,
+        query,
+        run.model_policy?.work_mode,
+      );
     } else if (name === "search_skills") {
       const { query } = z
         .object({ query: z.string().trim().min(1).max(500) })
@@ -1800,11 +1862,14 @@ export async function toolStep(
       const known = new Set(
         [
           ...builtinTools,
+          projectPageTool,
+          projectPagesReadTool,
           ...(await bridgeToolsFor(c, task)),
           ...environmentTools,
         ]
           .map((t) => t.function.name)
-          .concat(Object.keys(mapping)),
+          .concat(Object.keys(mapping))
+          .filter((n) => modeAllowsTool(run.model_policy?.work_mode, n)),
       );
       if (names.some((n) => !known.has(n)))
         throw new HttpError(
@@ -2193,11 +2258,36 @@ export async function toolStep(
       result = { task_id: id, assigned_to: agent.name };
     } else if (name === "wait_for_team") {
       const children = await c.query(
-        "SELECT title,status,result,error FROM tasks WHERE parent_id=$1",
+        "SELECT id,title,status,result,error FROM tasks WHERE parent_id=$1 ORDER BY id",
         [task.id],
       );
       if (!children.rowCount) result = "Keine delegierten Aufgaben vorhanden.";
       else if (
+        children.rows.some((t) => t.status === "input_required") &&
+        task.context_state?.team_blockers !==
+          JSON.stringify(
+            children.rows
+              .filter((t) => t.status === "input_required")
+              .map((t) => [t.id, t.error]),
+          )
+      ) {
+        const blocked = children.rows.filter(
+          (t) => t.status === "input_required",
+        );
+        await c.query(
+          "UPDATE tasks SET context_state=coalesce(context_state,'{}'::jsonb)||jsonb_build_object('team_blockers',$2::text) WHERE id=$1",
+          [task.id, JSON.stringify(blocked.map((t) => [t.id, t.error]))],
+        );
+        result = {
+          blocked: blocked.map((t) => ({
+            task_id: t.id,
+            title: t.title,
+            error: t.error,
+          })),
+          guidance:
+            "These children await input. Continue useful independent work within the same budget. Their approvals remain in Decisions. Call wait_for_team again when independent work is done; do not poll.",
+        };
+      } else if (
         children.rows.some(
           (t) => !["completed", "failed", "canceled"].includes(t.status),
         )

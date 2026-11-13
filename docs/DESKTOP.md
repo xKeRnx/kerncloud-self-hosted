@@ -8,7 +8,11 @@ The KeRnCloud desktop launcher installs the local server source, starts its Dock
 
 The launcher starts in English. Choose German from its selector if preferred; that choice is remembered on the device. Select Set up Docker if needed, complete the official installer/operating-system prompts, then select Start locally. Existing Docker installations and data are kept. Linux guided installation supports Debian/Ubuntu; other systems use their distribution's Docker installation method.
 
-The initial container build needs internet. Open the generated private configuration to obtain the initial administrator credentials, sign in and change the password. Public registration is off. The desktop defaults are website port 43100 and environment gateway port 43200; the launcher shows the actual address.
+The initial release-image download needs internet. Open the generated private configuration to obtain the initial administrator credentials, sign in and change the password. Public registration is off. The desktop defaults are website port 43100 and environment gateway port 43200; the launcher shows the actual address.
+
+## Connect to an existing server
+
+Under Connection choose **Connect to an existing server**, enter its HTTPS origin and save. The launcher remembers this device preference and skips local server initialization and Docker checks. Sign in using that server’s normal account. HTTP is accepted only for loopback testing. The dashboard has no privileged Electron preload or Node access. Switching modes preserves local services, files and grants; it does not stop a server that others may still use.
 
 ## Network and users
 

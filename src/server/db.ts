@@ -1,4 +1,7 @@
-import { ensureSelfHostedPlan, assignNewSelfHostedAccount } from "./self-hosted.ts";
+import {
+  ensureSelfHostedPlan,
+  assignNewSelfHostedAccount,
+} from "./self-hosted.ts";
 import pg, { type PoolClient } from "pg";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -289,9 +292,25 @@ export async function ensureDb() {
           "utf8",
         ),
       );
-      await c.query(readFileSync(join(process.cwd(), "src/server/migrations/033.sql"), "utf8"));
+      await c.query(
+        readFileSync(
+          join(process.cwd(), "src/server/migrations/033.sql"),
+          "utf8",
+        ),
+      );
       await ensureSelfHostedPlan(c);
-      await c.query(readFileSync(join(process.cwd(), "src/server/migrations/034.sql"), "utf8"));
+      await c.query(
+        readFileSync(
+          join(process.cwd(), "src/server/migrations/034.sql"),
+          "utf8",
+        ),
+      );
+      await c.query(
+        readFileSync(
+          join(process.cwd(), "src/server/migrations/035.sql"),
+          "utf8",
+        ),
+      );
       if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
         const existing = await c.query("SELECT id FROM users WHERE email=$1", [
           process.env.ADMIN_EMAIL.toLowerCase(),

@@ -1,4 +1,5 @@
 "use client";
+import { TaskWorkplace } from "./task-workplace";
 import { useWorkspaceAppearance } from "./workspace-appearance";
 import type { ThemePreference } from "@/src/core/appearance";
 import { KernCloudLogo } from "./kerncloud-logo";
@@ -149,7 +150,7 @@ function runTitle(goal: string) {
   return line.length > 120 ? line.slice(0, 117).trimEnd() + "…" : line;
 }
 type State = Snapshot & {
-  appearance?: {theme: ThemePreference; canSave: boolean};
+  appearance?: { theme: ThemePreference; canSave: boolean };
   artifacts: Artifact[];
   ledger: { amount: number; reason: string; created_at: string }[];
 };
@@ -576,7 +577,9 @@ export function WorkspaceApp({
     [busy, setBusy] = useState(false),
     [modal, setModal] = useState<ReactNode>(null),
     [search, setSearch] = useState("");
-  useEffect(()=>{ if(state?.appearance) appearance.sync(state.appearance); },[state?.appearance?.theme,state?.appearance?.canSave,appearance.sync]);
+  useEffect(() => {
+    if (state?.appearance) appearance.sync(state.appearance);
+  }, [state?.appearance?.theme, state?.appearance?.canSave, appearance.sync]);
   const [detailTab, setDetailTab] = useState<string | null>(null);
   useEffect(() => setDetailTab(null), [runId]);
   const refreshSequence = useRef(0);
@@ -786,7 +789,7 @@ export function WorkspaceApp({
     setBusy(true);
     try {
       await api("auth/logout", {});
-      appearance.sync({theme:"light",canSave:false});
+      appearance.sync({ theme: "light", canSave: false });
       selectWorkspace(undefined);
       selectedRoute.current = undefined;
       setState(null);
@@ -1906,6 +1909,7 @@ export function WorkspaceApp({
                     {[
                       ["work", t("Fortschritt", "Progress")],
                       ["results", t("Ergebnis", "Result")],
+                      ["workplace", t("Arbeitsplatz", "Workplace")],
                       ["history", t("Kommunikation", "Communication")],
                       [
                         "advanced",
@@ -1922,6 +1926,12 @@ export function WorkspaceApp({
                       </button>
                     ))}
                   </nav>
+                  {taskSection === "workplace" && (
+                    <TaskWorkplace
+                      run={selected}
+                      onResults={() => setDetailTab("results")}
+                    />
+                  )}
                   {taskSection === "advanced" && (
                     <>
                       <RunProcesses

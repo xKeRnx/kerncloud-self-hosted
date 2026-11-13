@@ -145,6 +145,7 @@ export function ModelCatalog({
         active: f.get("active") === "on",
         monitor_enabled: f.get("monitor_enabled") === "on",
         streaming: f.get("streaming") === "on",
+        engine_kind: f.get("engine_kind") ?? "openai-chat",
         max_output_tokens: Number(f.get("max_output_tokens")),
         context_window_tokens: f.get("context_window_tokens")
           ? Number(f.get("context_window_tokens"))
@@ -481,6 +482,32 @@ export function ModelCatalog({
                   maxLength={2000}
                 />
               </Field>
+              <label className="field">
+                <span>
+                  {t(
+                    "Agenten-Engine / API-Protokoll",
+                    "Agent engine / API protocol",
+                  )}
+                </span>
+                <select
+                  name="engine_kind"
+                  defaultValue={editing?.engine_kind ?? "openai-chat"}
+                >
+                  <option value="openai-chat">
+                    OpenAI-compatible · Chat Completions
+                  </option>
+                  <option value="openai-responses">
+                    OpenAI-compatible · Responses
+                  </option>
+                  <option value="anthropic">Anthropic · Messages</option>
+                </select>
+                <small>
+                  {t(
+                    "CLI-/ACP-Engines ohne kontrollierbares Gesamtlimit sind für feste Budgets nicht freigeschaltet.",
+                    "CLI/ACP engines without enforceable total limits are not enabled for fixed-budget work.",
+                  )}
+                </small>
+              </label>
               <ModelCapabilityFields
                 model={editing}
                 admin={admin}

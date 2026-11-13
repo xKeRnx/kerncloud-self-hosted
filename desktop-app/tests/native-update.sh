@@ -21,6 +21,7 @@ test "$(dpkg-query -W -f='${Version}' kerncloud)" = "${RELEASE_TAG#v}"
 xvfb-run -a /opt/KeRnCloud/kerncloud-desktop --diagnostics-report "$RUNNER_TEMP/native-upgrade-after.json"
 test "$before" = "$(sha256sum "$KERNCLOUD_DESKTOP_DATA_DIR/.env" "$KERNCLOUD_DESKTOP_DATA_DIR/grants.fixture.json")"
 REPORT="$RUNNER_TEMP/native-upgrade-after.json" node -e "const r=require(process.env.REPORT);if(!r.ok||!r.rendererLoaded||r.version!==process.env.RELEASE_TAG.slice(1))throw Error('Updated app verification failed');"
+xvfb-run -a node "$GITHUB_WORKSPACE/desktop-app/tests/remote-launch.cjs" /opt/KeRnCloud/kerncloud-desktop
 sudo dpkg --remove kerncloud
 test "$before" = "$(sha256sum "$KERNCLOUD_DESKTOP_DATA_DIR/.env" "$KERNCLOUD_DESKTOP_DATA_DIR/grants.fixture.json")"
 echo 'Real Linux native download, dpkg upgrade, first launch and retained fixture configuration/grants verified.'

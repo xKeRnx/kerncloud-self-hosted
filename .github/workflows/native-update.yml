@@ -61,3 +61,4 @@ jobs:
           path: |
             ${{ runner.temp }}/native-updater-proof.json
             ${{ runner.temp }}/native-upgrade-after.json
+            ${{ runner.temp }}/remote-client-test/report.json

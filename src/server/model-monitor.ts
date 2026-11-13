@@ -57,13 +57,18 @@ export async function checkModel(workspace: string | null, id?: string) {
   if (!claim) return;
   if (claim.kind === "cached") return claim.result;
   const m = claim.model;
-  const result = await inspectModel(m.endpoint, m.model, decrypt(m.secret));
+  const result = await inspectModel(
+    m.endpoint,
+    m.model,
+    decrypt(m.secret),
+    m.engine_kind,
+  );
   // An edit, deletion or later claim during I/O must not inherit this result.
   const updated = await pool.query(
     `UPDATE model_offerings SET check_status=$2,
     capabilities=CASE WHEN $2='available' THEN $6::jsonb ELSE capabilities END
     WHERE id=$1 AND endpoint=$3 AND model=$4 AND secret=$5 AND deleted_at IS NULL
-      AND active=true AND checked_at=$7 AND check_status='checking'`,
+      AND active=true AND checked_at=$7 AND check_status='checking' AND engine_kind=$8`,
     [
       m.id,
       result.status,
@@ -72,6 +77,7 @@ export async function checkModel(workspace: string | null, id?: string) {
       m.secret,
       JSON.stringify(result.capabilities),
       claim.checkedAt,
+      m.engine_kind,
     ],
   );
   const window = modelCheckWindow(claim.checkedAt);

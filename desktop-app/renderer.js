@@ -90,8 +90,13 @@ function renderProgress(context, state) {
 }
 function renderServices() {
   if (info?.connection?.mode === "remote") {
-    text($("#runtime-state"),info.ready ? t("Connected","Verbunden") : t("Server unavailable","Server nicht erreichbar"));
-    text($("#service-description"),info.url);
+    text(
+      $("#runtime-state"),
+      info.ready
+        ? t("Connected", "Verbunden")
+        : t("Server unavailable", "Server nicht erreichbar"),
+    );
+    text($("#service-description"), info.url);
     setControls();
     return;
   }
@@ -193,7 +198,9 @@ function renderServices() {
   setControls();
 }
 function setControls() {
-  const appInstalling = ["verifying", "installing"].includes(updateState?.phase);
+  const appInstalling = ["verifying", "installing"].includes(
+    updateState?.phase,
+  );
   for (const button of document.querySelectorAll("[data-action]")) {
     let disabled = busy || appInstalling;
     if (!info && ["start", "stop", "open"].includes(button.dataset.action))
@@ -212,7 +219,11 @@ function setControls() {
             "stopped";
       if (["open", "users"].includes(command)) disabled = !info.ready;
     }
-    if (info?.connection?.mode === "remote" && !["open","users"].includes(button.dataset.action)) disabled = true;
+    if (
+      info?.connection?.mode === "remote" &&
+      !["open", "users"].includes(button.dataset.action)
+    )
+      disabled = true;
     button.disabled = disabled;
   }
   for (const field of document.querySelectorAll(
@@ -227,8 +238,10 @@ async function refresh(fields = false) {
     info = await window.kernLocal.action("info");
     updateState = info.updates;
     const remote = info.connection?.mode === "remote";
-    for (const node of document.querySelectorAll("[data-local-only]")) node.hidden = remote;
-    for (const button of $("#services-panel").querySelectorAll("[data-action]")) button.hidden = remote;
+    for (const node of document.querySelectorAll("[data-local-only]"))
+      node.hidden = remote;
+    for (const button of $("#services-panel").querySelectorAll("[data-action]"))
+      button.hidden = remote;
     if (fields) {
       $("#connection-mode").value = info.connection?.mode ?? "local";
       $("#server-address").value = info.connection?.url ?? "";
@@ -270,42 +283,93 @@ window.kernLocal.onProgress((state) => {
 });
 function renderUpdates() {
   if (!updateState) return;
-  const s = updateState, labels = {
-    idle: t("Updates are checked automatically when enabled.", "Updates werden bei aktivierter Automatik selbstständig geprüft."),
-    checking: t("Checking for app updates…", "App-Updates werden geprüft …"),
-    current: t("Your app is up to date.", "Deine App ist aktuell."),
-    unavailable: t("No automatic update package is available for this installation yet.", "Für diese Installation ist noch kein automatisches Update-Paket verfügbar."),
-    downloading: t("Downloading verified app update…", "Geprüftes App-Update wird heruntergeladen …"),
-    ready: t("Update ready. Install now or let it install the next time you open the app (Linux requires a click).", "Update bereit. Jetzt installieren oder beim nächsten Öffnen der App installieren lassen (unter Linux per Klick)."),
-    verifying: t("Verifying the update before installation…", "Update wird vor der Installation geprüft …"),
-    installing: t("Installing and restarting the app…", "App wird installiert und neu gestartet …"),
-    error: t("Could not complete the update. Your saved data is preserved. Check again later.", "Update konnte nicht abgeschlossen werden. Deine gespeicherten Daten bleiben erhalten. Bitte später erneut prüfen."),
-    "preferences-error": t("Check your update preferences and re-enable automatic updates if desired.", "Prüfe deine Update-Einstellung und aktiviere die Automatik bei Bedarf erneut."),
-  };
-  text($("#app-update-status"), (labels[s.phase] ?? labels.idle) + (s.availableVersion ? " · " + s.availableVersion : ""));
+  const s = updateState,
+    labels = {
+      idle: t(
+        "Updates are checked automatically when enabled.",
+        "Updates werden bei aktivierter Automatik selbstständig geprüft.",
+      ),
+      checking: t("Checking for app updates…", "App-Updates werden geprüft …"),
+      current: t("Your app is up to date.", "Deine App ist aktuell."),
+      unavailable: t(
+        "No automatic update package is available for this installation yet.",
+        "Für diese Installation ist noch kein automatisches Update-Paket verfügbar.",
+      ),
+      downloading: t(
+        "Downloading verified app update…",
+        "Geprüftes App-Update wird heruntergeladen …",
+      ),
+      ready: t(
+        "Update ready. Install now or let it install the next time you open the app (Linux requires a click).",
+        "Update bereit. Jetzt installieren oder beim nächsten Öffnen der App installieren lassen (unter Linux per Klick).",
+      ),
+      verifying: t(
+        "Verifying the update before installation…",
+        "Update wird vor der Installation geprüft …",
+      ),
+      installing: t(
+        "Installing and restarting the app…",
+        "App wird installiert und neu gestartet …",
+      ),
+      error: t(
+        "Could not complete the update. Your saved data is preserved. Check again later.",
+        "Update konnte nicht abgeschlossen werden. Deine gespeicherten Daten bleiben erhalten. Bitte später erneut prüfen.",
+      ),
+      "preferences-error": t(
+        "Check your update preferences and re-enable automatic updates if desired.",
+        "Prüfe deine Update-Einstellung und aktiviere die Automatik bei Bedarf erneut.",
+      ),
+    };
+  text(
+    $("#app-update-status"),
+    (labels[s.phase] ?? labels.idle) +
+      (s.availableVersion ? " · " + s.availableVersion : ""),
+  );
   text($("#app-update-version"), "Version " + s.version);
   $("#automatic-updates").checked = s.automatic;
   const installing = ["verifying", "installing"].includes(s.phase);
   $("#automatic-updates").disabled = installing;
-  $("#check-app-update").disabled = busy || ["checking", "downloading", "verifying", "installing"].includes(s.phase);
+  $("#check-app-update").disabled =
+    busy ||
+    ["checking", "downloading", "verifying", "installing"].includes(s.phase);
   $("#install-app-update").hidden = s.phase !== "ready";
   $("#install-app-update").disabled = busy || !s.canInstall;
   $("#app-update-progress").hidden = s.phase !== "downloading";
   $("#app-update-progress").value = s.progress;
 }
-window.kernLocal.onUpdates(state => {updateState = state; setControls();});
+window.kernLocal.onUpdates((state) => {
+  updateState = state;
+  setControls();
+});
 async function updateAction(command, input) {
   try {
     updateState = await window.kernLocal.action(command, input);
     setControls();
   } catch (error) {
-    text($("#app-update-status"), String(error.message).replace(/^Error invoking remote method '[^']+': (?:Error: )?/, ""));
-    await window.kernLocal.action("updates:state").then(state => {updateState = state;}).catch(() => {});
+    text(
+      $("#app-update-status"),
+      String(error.message).replace(
+        /^Error invoking remote method '[^']+': (?:Error: )?/,
+        "",
+      ),
+    );
+    await window.kernLocal
+      .action("updates:state")
+      .then((state) => {
+        updateState = state;
+      })
+      .catch(() => {});
   }
 }
-$("#check-app-update").addEventListener("click", () => updateAction("updates:check"));
-$("#install-app-update").addEventListener("click", () => updateAction("updates:install"));
-$("#automatic-updates").addEventListener("change", e => updateAction("updates:automatic", {enabled: e.target.checked}));
+$("#check-app-update").addEventListener("click", () =>
+  updateAction("updates:check"),
+);
+$("#install-app-update").addEventListener("click", () =>
+  updateAction("updates:install"),
+);
+$("#automatic-updates").addEventListener("change", (e) =>
+  updateAction("updates:automatic", { enabled: e.target.checked }),
+);
 const success = {
   start: () =>
     t(
@@ -464,9 +528,26 @@ refresh(true)
   .catch((e) => message("services", e.message, true));
 window.kernLocal.ready?.();
 
-$("#connection-mode").addEventListener("change",e => {$("#server-address-row").hidden = e.target.value !== "remote";});
-$("#connection-form").addEventListener("submit", async e => {
- e.preventDefault(); if(busy)return;
- try {await window.kernLocal.action("connection:save",{mode:$("#connection-mode").value,url:$("#server-address").value});await refresh(true);text($("#connection-message"),t("Connection saved. Your local installation is preserved.","Verbindung gespeichert. Deine lokale Installation bleibt erhalten."));}
- catch(error){text($("#connection-message"),error.message);}
+$("#connection-mode").addEventListener("change", (e) => {
+  $("#server-address-row").hidden = e.target.value !== "remote";
+});
+$("#connection-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (busy) return;
+  try {
+    await window.kernLocal.action("connection:save", {
+      mode: $("#connection-mode").value,
+      url: $("#server-address").value,
+    });
+    await refresh(true);
+    text(
+      $("#connection-message"),
+      t(
+        "Connection saved. Your local installation is preserved.",
+        "Verbindung gespeichert. Deine lokale Installation bleibt erhalten.",
+      ),
+    );
+  } catch (error) {
+    text($("#connection-message"), error.message);
+  }
 });

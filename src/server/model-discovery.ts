@@ -2,6 +2,7 @@ import {
   parseProviderCatalog,
   type ProviderModel,
 } from "../core/provider-catalog.ts";
+import { engineKinds, type EngineKind } from "../core/inference-engine.ts";
 import { z } from "zod";
 import { pool } from "./db.ts";
 import { decrypt } from "./security.ts";
@@ -9,7 +10,11 @@ import { HttpError } from "./auth.ts";
 import { networkEndpoint } from "./mcp.ts";
 import { type ModelCapabilities } from "../core/model-capabilities.ts";
 
-export async function inspectProviderCatalog(endpoint: string, key: string) {
+export async function inspectProviderCatalog(
+  endpoint: string,
+  key: string,
+  engine: EngineKind = "openai-chat",
+) {
   const empty = (status: string) => ({
     status,
     models: [] as ProviderModel[],
@@ -18,7 +23,15 @@ export async function inspectProviderCatalog(endpoint: string, key: string) {
   try {
     const url = await networkEndpoint(endpoint);
     const response = await fetch(endpoint.replace(/\/$/, "") + "/models", {
-      headers: key ? { Authorization: `Bearer ${key}` } : {},
+      headers:
+        engine === "anthropic"
+          ? {
+              "anthropic-version": "2023-06-01",
+              ...(key ? { "x-api-key": key } : {}),
+            }
+          : key
+            ? { Authorization: `Bearer ${key}` }
+            : {},
       redirect: "manual",
       signal: AbortSignal.timeout(8000),
     });
@@ -65,8 +78,13 @@ export async function inspectModel(
   endpoint: string,
   model: string,
   key: string,
-): Promise<{ status: string; capabilities: ModelCapabilities; listing?: ProviderModel }> {
-  const result = await inspectProviderCatalog(endpoint, key);
+  engine: EngineKind = "openai-chat",
+): Promise<{
+  status: string;
+  capabilities: ModelCapabilities;
+  listing?: ProviderModel;
+}> {
+  const result = await inspectProviderCatalog(endpoint, key, engine);
   const found = result.models.find((m) => m.id === model);
   return found
     ? { status: "available", capabilities: found.capabilities, listing: found }
@@ -90,10 +108,11 @@ export async function listProviderModels(
       id: z.string().min(1).max(100).optional(),
       endpoint: z.string().url(),
       key: z.string().max(2000).optional(),
+      engine_kind: z.enum(engineKinds).optional(),
     })
     .parse(body);
   const { key } = await discoveryCredential(workspace, input);
-  return inspectProviderCatalog(input.endpoint, key);
+  return inspectProviderCatalog(input.endpoint, key, input.engine_kind);
 }
 
 export async function discoveryCredential(
@@ -103,7 +122,7 @@ export async function discoveryCredential(
   const old = input.id
     ? (
         await pool.query(
-          "SELECT id,endpoint,model,secret FROM model_offerings WHERE id=$1 AND workspace_id IS NOT DISTINCT FROM $2 AND deleted_at IS NULL",
+          "SELECT id,endpoint,model,secret,engine_kind FROM model_offerings WHERE id=$1 AND workspace_id IS NOT DISTINCT FROM $2 AND deleted_at IS NULL",
           [input.id, workspace],
         )
       ).rows[0]
@@ -127,8 +146,9 @@ export async function discoverModel(workspace: string | null, body: unknown) {
       endpoint: z.string().url(),
       model: z.string().trim().min(1).max(200),
       key: z.string().max(2000).optional(),
+      engine_kind: z.enum(engineKinds).optional(),
     })
     .parse(body);
   const { key } = await discoveryCredential(workspace, b);
-  return inspectModel(b.endpoint, b.model, key);
+  return inspectModel(b.endpoint, b.model, key, b.engine_kind);
 }

@@ -1,3 +1,5 @@
+import { projectPageTool, projectPagesReadTool } from "./project-pages.ts";
+import { modeAllowsTool, type WorkMode } from "../core/work-modes.ts";
 import { searchToolIndex } from "../core/tool-search.ts";
 import { bridgeToolsFor } from "./bridge.ts";
 import { builtinTools } from "./engine.ts";
@@ -8,6 +10,7 @@ export async function authorizedToolSearch(
   task: any,
   mapping: Record<string, { connectionId: string; toolName: string }>,
   query: string,
+  mode?: WorkMode,
 ) {
   const connections = (
     await c.query(
@@ -17,6 +20,8 @@ export async function authorizedToolSearch(
   ).rows;
   const tools = [
     ...builtinTools,
+    projectPageTool,
+    projectPagesReadTool,
     ...(await bridgeToolsFor(c, task)),
     ...environmentTools,
   ].map((t) => ({
@@ -36,7 +41,10 @@ export async function authorizedToolSearch(
         schema: undefined,
       });
   }
-  const matches = searchToolIndex(tools, query);
+  const matches = searchToolIndex(
+    tools.filter((t) => modeAllowsTool(mode, t.name)),
+    query,
+  );
   if (matches.length) {
     const previous = task.context_state?.loaded_tools ?? [];
     const names = [

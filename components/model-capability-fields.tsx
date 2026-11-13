@@ -97,6 +97,7 @@ export function ModelCapabilityFields({
     return {
       id: model?.id,
       endpoint: String(f.get("endpoint") ?? ""),
+      engine_kind: String(f.get("engine_kind") ?? "openai-chat"),
       ...(!model || f.get("replace")
         ? { key: String(f.get("key") ?? "") }
         : {}),
@@ -197,6 +198,7 @@ export function ModelCapabilityFields({
         {
           id: model?.id,
           endpoint,
+          engine_kind: String(f.get("engine_kind") ?? "openai-chat"),
           model: id,
           ...(!model || f.get("replace")
             ? { key: String(f.get("key") ?? "") }
@@ -229,7 +231,7 @@ export function ModelCapabilityFields({
 
     const changed = (e: Event) => {
       if (
-        ["endpoint", "model", "key", "replace"].includes(
+        ["endpoint", "model", "key", "replace", "engine_kind"].includes(
           (e.target as HTMLInputElement).name,
         )
       ) {
@@ -252,7 +254,7 @@ export function ModelCapabilityFields({
     const blurred = (e: Event) => {
       if (
         !manual &&
-        ["endpoint", "model", "key", "replace"].includes(
+        ["endpoint", "model", "key", "replace", "engine_kind"].includes(
           (e.target as HTMLInputElement).name,
         )
       ) {

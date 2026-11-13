@@ -88,6 +88,7 @@ export interface Run {
   credit_limit?: number;
   token_limit?: number;
   model_policy?: {
+    work_mode?: "draft" | "execute" | "team";
     fallbacks?: string[];
     autonomy_version?: number;
     delivery_bundle?: boolean;
@@ -140,6 +141,15 @@ export interface ToolCall {
   function: { name: string; arguments: string };
 }
 export interface Message {
+  engine_state?: {
+    model: string;
+    reasoning: {
+      type: "reasoning";
+      id: string;
+      summary: never[];
+      encrypted_content: string;
+    }[];
+  };
   recovery_code?: string;
   role: "system" | "user" | "assistant" | "tool";
   content: string | null;
@@ -174,6 +184,7 @@ export interface Connection {
   enabled: boolean;
 }
 export interface Provider {
+  engine_kind?: "openai-chat" | "openai-responses" | "anthropic";
   context_window_tokens?: number | null;
   provider_name?: string;
   request_timeout_seconds?: number;
@@ -192,6 +203,7 @@ export interface Provider {
   streaming?: boolean;
 }
 export interface ModelOffering {
+  engine_kind?: "openai-chat" | "openai-responses" | "anthropic";
   pricing_config?: ModelTariffConfig | null;
   monitor_enabled?: boolean;
   checked_at?: string | null;

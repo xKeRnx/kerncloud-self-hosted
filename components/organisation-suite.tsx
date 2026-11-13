@@ -1,4 +1,5 @@
 "use client";
+import { starterTeams } from "@/src/core/starter-teams";
 import { ProjectManager } from "./project-manager";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
@@ -1353,10 +1354,7 @@ function TeamPackage({ state }: { state: Snapshot }) {
   return (
     <details className="panel settings-panel">
       <summary>
-        {t(
-          "Teamvorlage exportieren oder importieren",
-          "Export or import team template",
-        )}
+        {t("Starterteams, Export & Import", "Starter teams, export & import")}
       </summary>
       <p>
         {t(
@@ -1364,6 +1362,37 @@ function TeamPackage({ state }: { state: Snapshot }) {
           "Includes this project’s roles, reporting lines, skills and routines. No keys, containers or task files. Still review all free text before sharing.",
         )}
       </p>
+      <div className="starter-team-gallery">
+        {starterTeams.map((team) => (
+          <article className="panel" key={team.id}>
+            <h3>{team.name}</h3>
+            <p>{team.description}</p>
+            <ul>
+              {team.checks.map((check) => (
+                <li key={check}>{check}</li>
+              ))}
+            </ul>
+            <small>
+              {t(
+                "Budgetvorschlag, kein zusätzliches Guthaben:",
+                "Suggested token budget, no additional balance:",
+              )}{" "}
+              {team.suggestedTokens.toLocaleString()}
+            </small>
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={() => {
+                setText(JSON.stringify(team.package, null, 2));
+                setPreview(null);
+                setReviewed(false);
+              }}
+            >
+              {t("Vorlage prüfen", "Review template")}
+            </button>
+          </article>
+        ))}
+      </div>
       {error && <p role="alert">{error}</p>}
       <button
         className="secondary"

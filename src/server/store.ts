@@ -412,6 +412,7 @@ export async function createRun(
     automation?: { triggerId: string; revision: number };
     quality?: { caseId: string; modelId: string };
     userBudget?: boolean;
+    workMode?: "draft" | "execute" | "team";
   } = {},
 ) {
   return transaction(async (c) => {
@@ -598,6 +599,7 @@ export async function createRun(
                 },
               }
             : {}),
+          work_mode: limits.workMode,
           autonomy_version: 1,
           delivery_bundle:
             targets.length === 1 &&

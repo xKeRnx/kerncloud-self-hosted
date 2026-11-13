@@ -35,8 +35,16 @@ async function request(
   method = "POST",
 ): Promise<Result> {
   // Historical fixtures explicitly exercise German content; defaults are checked separately below.
-  if (["admin/legal", "admin/legal-preview"].includes(path) && body && typeof body === "object" && !("locale" in body)) body = { ...body, locale: "de" };
-  const fixtureCookie = /(?:^|;\s*)kc_locale=/.test(cookie) ? cookie : [cookie, "kc_locale=de"].filter(Boolean).join("; ");
+  if (
+    ["admin/legal", "admin/legal-preview"].includes(path) &&
+    body &&
+    typeof body === "object" &&
+    !("locale" in body)
+  )
+    body = { ...body, locale: "de" };
+  const fixtureCookie = /(?:^|;\s*)kc_locale=/.test(cookie)
+    ? cookie
+    : [cookie, "kc_locale=de"].filter(Boolean).join("; ");
   const req = new NextRequest(`http://localhost:3100/api/${path}`, {
     method: body === undefined ? "GET" : method,
     headers: {
@@ -65,7 +73,9 @@ async function listen(server: ReturnType<typeof createServer>) {
   return `http://127.0.0.1:${address.port}`;
 }
 test(
-  selfHostedEdition ? "Self-hosted: isolation, local access, budgets and real workers with local protocol fixtures" : "SaaS: Isolation, Adminrechte, Guthaben und reale Worker-Delegation mit lokaler Protokoll-Fixture",
+  selfHostedEdition
+    ? "Self-hosted: isolation, local access, budgets and real workers with local protocol fixtures"
+    : "SaaS: Isolation, Adminrechte, Guthaben und reale Worker-Delegation mit lokaler Protokoll-Fixture",
   { timeout: 420000 },
   async (t) => {
     // This suite uses a dedicated disposable database, never the local user's workspace database.
@@ -666,18 +676,37 @@ test(
       await new Promise<void>((r) => fixture.close(() => r()));
       await pool.end();
     });
-    await t.test("New visitors use English despite a German browser; explicit German is preserved", async () => {
-      const siteResponse = await handle(new NextRequest("http://localhost:3100/api/site", {headers:{"accept-language":"de-DE,de;q=0.9"}}),"site");
-      assert.equal(siteResponse.status,200);
-      const site=await siteResponse.json();
-      assert.equal(site.languages.defaultLocale,"en");
-      assert.deepEqual(site.languages.enabled,["en","de"]);
-      for(const [cookie,pattern] of [["",/sign in|sign-in|session|authenticated/i],["kc_locale=de",/melde dich an|anmelden|angemeldet|Anmeldung|Sitzung/i]] as const){
-        const denied=await handle(new NextRequest("http://localhost:3100/api/snapshot",{headers:{cookie,"accept-language":"de-DE"}}),"snapshot");
-        assert.equal(denied.status,401);
-        assert.match((await denied.json()).error,pattern);
-      }
-    });
+    await t.test(
+      "New visitors use English despite a German browser; explicit German is preserved",
+      async () => {
+        const siteResponse = await handle(
+          new NextRequest("http://localhost:3100/api/site", {
+            headers: { "accept-language": "de-DE,de;q=0.9" },
+          }),
+          "site",
+        );
+        assert.equal(siteResponse.status, 200);
+        const site = await siteResponse.json();
+        assert.equal(site.languages.defaultLocale, "en");
+        assert.deepEqual(site.languages.enabled, ["en", "de"]);
+        for (const [cookie, pattern] of [
+          ["", /sign in|sign-in|session|authenticated/i],
+          [
+            "kc_locale=de",
+            /melde dich an|anmelden|angemeldet|Anmeldung|Sitzung/i,
+          ],
+        ] as const) {
+          const denied = await handle(
+            new NextRequest("http://localhost:3100/api/snapshot", {
+              headers: { cookie, "accept-language": "de-DE" },
+            }),
+            "snapshot",
+          );
+          assert.equal(denied.status, 401);
+          assert.match((await denied.json()).error, pattern);
+        }
+      },
+    );
     const admin = await request("auth/login", {
       email: "admin@test.local",
       password: "integration-admin-password",
@@ -686,8 +715,8 @@ test(
     const { bridgeTests } = await import("./bridge.ts");
     await bridgeTests(t, { request, pool });
     if (process.env.BRIDGE_FOCUS === "1") return;
-    const {appearanceTests} = await import("./appearance.ts");
-    await appearanceTests(t,{request,pool,handle});
+    const { appearanceTests } = await import("./appearance.ts");
+    await appearanceTests(t, { request, pool, handle });
     const { workspaceRebuildTests } = await import("./workspace-rebuild.ts");
     await workspaceRebuildTests(t, { request, pool });
     if (process.env.WORKSPACE_REBUILD_FOCUS === "1") return;
@@ -700,6 +729,10 @@ test(
     const { waitlistTests } = await import("./self-hosted-waitlist.ts");
     if (!selfHostedEdition) await waitlistTests(t, { request, pool, admin });
     if (process.env.WAITLIST_FOCUS === "1") return;
+    const { workspaceEvolutionTests } =
+      await import("./workspace-evolution.ts");
+    await workspaceEvolutionTests(t, { request, pool, handle });
+    if (process.env.EVOLUTION_FOCUS === "1") return;
     const { organisationTests } = await import("./organisation.ts");
     if (process.env.ORGANISATION_FOCUS === "1") {
       await organisationTests(t, { request, pool, fixtureUrl });
@@ -1158,18 +1191,31 @@ test(
     );
     if (selfHostedEdition) {
       // Public-edition contracts replace paid SaaS subscription fixtures below.
-      const { selfHostedEditionTests } = await import("./self-hosted-edition.ts");
+      const { selfHostedEditionTests } =
+        await import("./self-hosted-edition.ts");
       await selfHostedEditionTests(t, { request, pool, admin });
-      const { runtimeImprovementTests } = await import("./runtime-improvements.ts");
+      const { runtimeImprovementTests } =
+        await import("./runtime-improvements.ts");
       await runtimeImprovementTests(t, fixtureUrl, platformUrl);
       const { resultTests } = await import("./artifacts.ts");
       await resultTests(t, { request, pool, handle, alice, bob, a });
       const { capabilityTests } = await import("./model-capabilities.ts");
       await capabilityTests(t, { request, pool, admin, foreign: alice });
       const { reasoningProfileTests } = await import("./reasoning-profiles.ts");
-      await reasoningProfileTests(t, { request, pool, admin, foreignCookie: alice.cookie });
-      const { modelAvailabilityTests } = await import("./model-availability.ts");
-      await modelAvailabilityTests(t, { request, pool, fixtureUrl, foreignCookie: alice.cookie });
+      await reasoningProfileTests(t, {
+        request,
+        pool,
+        admin,
+        foreignCookie: alice.cookie,
+      });
+      const { modelAvailabilityTests } =
+        await import("./model-availability.ts");
+      await modelAvailabilityTests(t, {
+        request,
+        pool,
+        fixtureUrl,
+        foreignCookie: alice.cookie,
+      });
       return;
     }
     assert.equal(

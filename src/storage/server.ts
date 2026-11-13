@@ -1,6 +1,6 @@
 import http from "node:http";
 import { mkdir, open, readFile, unlink } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
+import { resolve, dirname, sep } from "node:path";
 import { timingSafeEqual } from "node:crypto";
 export async function startObjectStorage(
   root = process.env.OBJECT_STORAGE_ROOT ?? "/data",
@@ -54,7 +54,7 @@ export async function startObjectStorage(
         return;
       }
       const file = resolve(base, key);
-      if (!file.startsWith(base + "/")) {
+      if (!file.startsWith(base + sep)) {
         res.writeHead(400).end();
         return;
       }
@@ -84,11 +84,14 @@ export async function startObjectStorage(
         } finally {
           await handle?.close();
         }
-        const directory = await open(dirname(file), "r");
-        try {
-          await directory.sync();
-        } finally {
-          await directory.close();
+        // Windows cannot open directories for fsync; the file itself was flushed above.
+        if (process.platform !== "win32") {
+          const directory = await open(dirname(file), "r");
+          try {
+            await directory.sync();
+          } finally {
+            await directory.close();
+          }
         }
         res.writeHead(201).end();
         return;

@@ -1,3 +1,6 @@
+import { projectPages, sharedProjectPage } from "./project-pages.ts";
+import { starterTeams } from "../core/starter-teams.ts";
+import { taskWorkplace } from "./task-workplace.ts";
 import { selfHostedEdition, selfHostedRouteAllowed } from "../core/edition.ts";
 import { preferredAppearance, saveAppearance } from "./appearance.ts";
 import { bridgeManage, bridgeAgent, bridgeDownload } from "./bridge.ts";
@@ -676,7 +679,8 @@ async function selectedRequestProject(
 }
 export async function handle(req: NextRequest, path: string) {
   try {
-    if (selfHostedEdition && !selfHostedRouteAllowed(path)) throw new HttpError(404, "In dieser lokalen Edition nicht verfügbar.");
+    if (selfHostedEdition && !selfHostedRouteAllowed(path))
+      throw new HttpError(404, "In dieser lokalen Edition nicht verfügbar.");
     await ensureDb();
     if (path === "health") {
       if (process.env.MAINTENANCE_MODE !== "external")
@@ -692,7 +696,7 @@ export async function handle(req: NextRequest, path: string) {
       return NextResponse.json({
         status: "ok",
         service: "kerncloud",
-        version: "0.39.0",
+        version: "0.40.0",
         edition: selfHostedEdition ? "self-hosted" : "operator",
       });
     if (path === "billing/webhook" && req.method === "POST")
@@ -822,9 +826,23 @@ export async function handle(req: NextRequest, path: string) {
       return NextResponse.json(await resetPassword(body));
     if (path === "public/bridge/updates" && method === "GET") {
       try {
-        const payload = await readFile(join(process.cwd(), "bridge-app/releases/updates.json"), "utf8");
-        return new NextResponse(payload, { headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
-      } catch { return NextResponse.json({ error: "Update service unavailable" }, { status: 503, headers: { "Cache-Control": "no-store" } }); }
+        const payload = await readFile(
+          join(process.cwd(), "bridge-app/releases/updates.json"),
+          "utf8",
+        );
+        return new NextResponse(payload, {
+          headers: {
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+          },
+        });
+      } catch {
+        return NextResponse.json(
+          { error: "Update service unavailable" },
+          { status: 503, headers: { "Cache-Control": "no-store" } },
+        );
+      }
     }
     if (path === "public/bridge/manifest" && method === "GET")
       return NextResponse.json(
@@ -849,9 +867,13 @@ export async function handle(req: NextRequest, path: string) {
               ? "text/markdown; charset=utf-8"
               : entry.name.endsWith(".pdf")
                 ? "application/pdf"
-                : entry.name.endsWith(".exe") ? "application/vnd.microsoft.portable-executable"
-                  : entry.name.endsWith(".deb") ? "application/vnd.debian.binary-package"
-                    : entry.name.endsWith(".dmg") ? "application/x-apple-diskimage" : "application/zip",
+                : entry.name.endsWith(".exe")
+                  ? "application/vnd.microsoft.portable-executable"
+                  : entry.name.endsWith(".deb")
+                    ? "application/vnd.debian.binary-package"
+                    : entry.name.endsWith(".dmg")
+                      ? "application/x-apple-diskimage"
+                      : "application/zip",
             "Content-Disposition": 'attachment; filename="' + entry.name + '"',
             "Cache-Control": "public, max-age=3600",
             "X-Content-Type-Options": "nosniff",
@@ -1003,6 +1025,8 @@ export async function handle(req: NextRequest, path: string) {
         req,
         path.split("/").at(-1) as "google" | "microsoft" | "github",
       );
+    if (path.startsWith("shared-project-pages/") && method === "GET")
+      return await sharedProjectPage(path.split("/")[1]);
     const { user, workspace, support } = await session(req);
     workspace.project_id = (
       await selectedRequestProject(req, workspace.id, user.id)
@@ -1046,9 +1070,12 @@ export async function handle(req: NextRequest, path: string) {
       !path.startsWith("profile") &&
       !path.startsWith("privacy") &&
       !path.startsWith("billing") &&
-      !["auth/logout", "workspaces/select", "preferences/project", "preferences/appearance"].includes(
-        path,
-      )
+      ![
+        "auth/logout",
+        "workspaces/select",
+        "preferences/project",
+        "preferences/appearance",
+      ].includes(path)
     )
       throw new HttpError(
         403,
@@ -1077,9 +1104,17 @@ export async function handle(req: NextRequest, path: string) {
         { headers: { "Cache-Control": "private, no-store" } },
       );
     }
-    if (path === "preferences/appearance" && (method === "GET" || method === "POST")) {
+    if (
+      path === "preferences/appearance" &&
+      (method === "GET" || method === "POST")
+    ) {
       // Identity comes exclusively from the authenticated session, never the request body.
-      return NextResponse.json(method === "POST" ? await saveAppearance(user.id, body) : await preferredAppearance(user.id), {headers: {"Cache-Control": "private, no-store"}});
+      return NextResponse.json(
+        method === "POST"
+          ? await saveAppearance(user.id, body)
+          : await preferredAppearance(user.id),
+        { headers: { "Cache-Control": "private, no-store" } },
+      );
     }
     if (path === "preferences/project" && method === "POST") {
       const b = z.object({ id }).parse(body);
@@ -1090,6 +1125,36 @@ export async function handle(req: NextRequest, path: string) {
           ? { id: project.id, saved: false }
           : await savePreferredProject(user.id, workspace.id, project.id),
       );
+    }
+    if (
+      /^runs\/[^/]+\/workplace$/.test(path) &&
+      ["GET", "POST"].includes(method)
+    )
+      return NextResponse.json(
+        await taskWorkplace(
+          user.id,
+          workspace.id,
+          path.split("/")[1],
+          method === "POST" ? body : undefined,
+        ),
+        { headers: { "Cache-Control": "private, no-store" } },
+      );
+    if (path === "suite/starter-teams" && method === "GET")
+      return NextResponse.json({ teams: starterTeams });
+    if (path === "project-pages" || path.startsWith("project-pages/")) {
+      const response = await projectPages(
+        user.id,
+        workspace.id,
+        workspace.project_id!,
+        method,
+        path.split("/"),
+        body,
+      );
+      return response instanceof Response
+        ? response
+        : NextResponse.json(response, {
+            headers: { "Cache-Control": "private, no-store" },
+          });
     }
     if (path === "suite/templates" && method === "POST")
       return NextResponse.json(
@@ -1865,7 +1930,13 @@ export async function handle(req: NextRequest, path: string) {
         }
       }
       return NextResponse.json(
-        {...await snapshot(user, workspace, { view, runId, before }), appearance: {...await preferredAppearance(user.id), canSave: !support}},
+        {
+          ...(await snapshot(user, workspace, { view, runId, before })),
+          appearance: {
+            ...(await preferredAppearance(user.id)),
+            canSave: !support,
+          },
+        },
         { headers: { "Cache-Control": "private, no-store" } },
       );
     }
@@ -1887,6 +1958,7 @@ export async function handle(req: NextRequest, path: string) {
     if (path === "runs" && method === "POST") {
       const b = z
         .object({
+          workMode: z.enum(["draft", "execute", "team"]).optional(),
           goal: z.string().trim().min(5).max(20000),
           agentId: id,
           projectId: id.optional(),
@@ -1924,6 +1996,7 @@ export async function handle(req: NextRequest, path: string) {
           {
             projectId: b.projectId ?? workspace.project_id,
             planItemId: b.planItemId,
+            workMode: b.workMode,
             userBudget:
               b.tokenLimit !== undefined || b.creditLimit !== undefined,
             tokenLimit: b.tokenLimit,
@@ -2295,6 +2368,18 @@ export async function handle(req: NextRequest, path: string) {
           work_apps: (
             await pool.query(
               "SELECT id,provider,name,scopes,agent_ids,write_enabled,enabled,created_at FROM work_app_connections WHERE workspace_id=$1",
+              [w.id],
+            )
+          ).rows,
+          project_pages: (
+            await pool.query(
+              "SELECT id,project_id,title,revision,artifact_id,preview_html,share_expires_at,created_at,updated_at FROM project_pages WHERE workspace_id=$1",
+              [w.id],
+            )
+          ).rows,
+          project_page_versions: (
+            await pool.query(
+              "SELECT v.* FROM project_page_versions v JOIN project_pages p ON p.id=v.page_id WHERE p.workspace_id=$1",
               [w.id],
             )
           ).rows,

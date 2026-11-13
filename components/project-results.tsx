@@ -1,4 +1,5 @@
 "use client";
+import { ProjectPages } from "./project-pages";
 import { useState } from "react";
 import Link from "next/link";
 import { api } from "./api-client";
@@ -15,7 +16,7 @@ export function ProjectResults({ state }: { state: any }) {
     state,
   );
   return (
-    <section>
+    <section className="project-results">
       <header className="workspace-page-heading">
         <div>
           <h1>{t("Ergebnisse & Dateien", "Results & files")}</h1>
@@ -27,6 +28,7 @@ export function ProjectResults({ state }: { state: any }) {
           </p>
         </div>
       </header>
+      <ProjectPages state={state} />
       {error && (
         <p role="alert" className="error-box">
           {error}

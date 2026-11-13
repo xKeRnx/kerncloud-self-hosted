@@ -6,7 +6,7 @@ KeRnCloud runs its own web app, PostgreSQL database, workers, scheduler and priv
 
 ## Requirements
 
-Use Docker with Linux containers and Compose v2. The source quick start also needs Node.js 22+. The desktop launcher includes its own Node runtime. Allow approximately four CPU cores, 8 GB free RAM and 20 GB disk space for a small installation; browsers, builds and local models can need more. The first build needs internet access.
+Use Docker with Linux containers and Compose v2. The source quick start also needs Node.js 22+. The desktop launcher includes its own Node runtime. Allow approximately four CPU cores, 8 GB free RAM and 20 GB disk space for a small installation; browsers, builds and local models can need more. The first start needs internet access to download release images.
 
 ## Source quick start
 
@@ -43,6 +43,8 @@ node scripts/self-host.mjs status
 node scripts/self-host.mjs backup
 node scripts/self-host.mjs update
 node scripts/self-host.mjs stop
+# Optional: return to saved images only if the migration set is unchanged
+node scripts/self-host.mjs rollback
 ```
 
 Stopping does not remove volumes. Updates use the installed source version, refuse to restart over open tasks and create database/object backups first. Preserve the matching `.env` and encryption key separately. An uninstall removes application files, while runtime data and Docker volumes remain. Never use `down -v` as part of an ordinary update or uninstall.
@@ -52,3 +54,9 @@ Stopping does not remove volumes. Updates use the installed source version, refu
 Run `doctor` to check the Linux engine and Compose. Check the launcher log or `node scripts/self-host.mjs logs` if startup is incomplete. If a port is in use, choose another. Automatic network allocation avoids occupied local subnets and preserves existing project networks. Do not remove unrelated Docker networks or volumes to resolve a startup problem.
 
 The Bridge is a separate device-access adapter. Installing the server does not grant access to your computer's files or desktop. Model connections, tool grants and approvals must still be configured deliberately.
+
+## Prebuilt releases and source builds
+
+Official releases include `distribution-images.json`, bound to the exact server version and immutable GHCR digests. Start and update download those images; ordinary customers do not need to compile the application. Containers still use the existing Compose project, database and object volumes. Build from source deliberately by setting `KERNCLOUD_IMAGE_MODE=source` in the private `.env`; developer checkouts without a release manifest also build from source.
+
+Before a server update, finish or cancel unfinished tasks. The updater saves database/object backups and records the previous local image IDs. `rollback` verifies the database migration set before switching images, refuses unresolved work and backs up again. It never downgrades the database or restores data automatically. If migrations changed, use a separately verified restore procedure with the matching database, objects and private `.env`. Do not delete previous images while you need that checkpoint.

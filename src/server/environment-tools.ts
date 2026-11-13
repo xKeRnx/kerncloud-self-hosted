@@ -20,7 +20,7 @@ export async function environmentPermission(
 ) {
   const e = (
     await c.query(
-      `SELECT e.* FROM customer_environments e JOIN tasks t ON t.workspace_id=e.workspace_id JOIN runs r ON r.id=t.run_id JOIN agents ag ON ag.id=t.agent_id JOIN workspaces w ON w.id=t.workspace_id JOIN accounts a ON a.owner_id=w.owner_id JOIN infrastructure_hosts h ON h.id=e.host_id JOIN users u ON u.id=w.owner_id WHERE t.id=$1 AND t.lease_token=$2 AND t.lease_until>now() AND t.status='running' AND r.status='running' AND NOT ag.execution_paused AND NOT w.execution_paused AND NOT u.suspended AND e.id=$3 AND e.project_id=r.project_id AND kc_project_agent(r.project_id,ag.id) AND e.agent_permissions ? $4 AND (jsonb_array_length(e.agent_ids)=0 OR e.agent_ids ? ag.id) AND ${hostPolicySql}`,
+      `SELECT e.* FROM customer_environments e JOIN tasks t ON t.workspace_id=e.workspace_id JOIN runs r ON r.id=t.run_id JOIN agents ag ON ag.id=t.agent_id JOIN workspaces w ON w.id=t.workspace_id JOIN accounts a ON a.owner_id=w.owner_id JOIN infrastructure_hosts h ON h.id=e.host_id JOIN users u ON u.id=w.owner_id WHERE t.id=$1 AND t.lease_token=$2 AND t.lease_until>now() AND t.status='running' AND r.status='running' AND NOT ag.execution_paused AND NOT w.execution_paused AND NOT u.suspended AND e.id=$3 AND NOT e.human_controlled AND e.project_id=r.project_id AND kc_project_agent(r.project_id,ag.id) AND e.agent_permissions ? $4 AND (jsonb_array_length(e.agent_ids)=0 OR e.agent_ids ? ag.id) AND ${hostPolicySql} FOR UPDATE OF e`,
       [taskId, lease, environmentId, permission],
     )
   ).rows[0];

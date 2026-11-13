@@ -20,7 +20,7 @@ const {
 } = require("./policy.cjs");
 const progress = require("./progress.js");
 const { StringDecoder } = require("node:string_decoder");
-const {loadConnection,saveConnection} = require("./connection.cjs");
+const { loadConnection, saveConnection } = require("./connection.cjs");
 const { DesktopUpdates } = require("./updates.cjs");
 let launcher,
   workspace,
@@ -72,29 +72,30 @@ else {
         );
       let local;
       const initializeLocal = async () => {
-      fs.cpSync(payload, runtime, {
-        recursive: true,
-        filter: (source) =>
-          ![
-            ".local-networks.yaml",
-            ".env",
-            "backups",
-            "node_modules",
-            ".git",
-            ".next",
-          ].includes(path.basename(source)),
-      });
-      local = await import(
-        pathToFileURL(path.join(runtime, "scripts/self-host.mjs")).href
-      );
-      config = local.prepare(runtime, {
-        port: 43100,
-        gatewayPort: 43200,
-      }).config;
+        fs.cpSync(payload, runtime, {
+          recursive: true,
+          filter: (source) =>
+            ![
+              ".local-networks.yaml",
+              ".env",
+              "backups",
+              "node_modules",
+              ".git",
+              ".next",
+            ].includes(path.basename(source)),
+        });
+        local = await import(
+          pathToFileURL(path.join(runtime, "scripts/self-host.mjs")).href
+        );
+        config = local.prepare(runtime, {
+          port: 43100,
+          gatewayPort: 43200,
+        }).config;
       };
       connection = loadConnection(app.getPath("userData"));
       if (connection.mode === "local") await initializeLocal();
-      const origin = () => connection.mode === "remote" ? connection.url : config.PUBLIC_URL;
+      const origin = () =>
+        connection.mode === "remote" ? connection.url : config.PUBLIC_URL;
       launcher = new BrowserWindow({
         show: !diagnosticReport || showDiagnosticLauncher,
         width: 1100,
@@ -122,8 +123,9 @@ else {
       );
       const action = async (command, input) => {
         if (command === "updates:state") return updates.snapshot();
-        if (command === "updates:check") return updates.check({manual: true});
-        if (command === "updates:automatic") return updates.automatic(input?.enabled);
+        if (command === "updates:check") return updates.check({ manual: true });
+        if (command === "updates:automatic")
+          return updates.automatic(input?.enabled);
         if (command === "updates:install") return updates.install();
         if (updates?.installing && command !== "info")
           throw Error("The app update is starting. Please wait.");
@@ -131,13 +133,49 @@ else {
           if (busy) throw Error("Wait for the current operation to finish");
           if (input?.mode === "local") await initializeLocal();
           connection = saveConnection(app.getPath("userData"), input);
-          if (workspace && !workspace.isDestroyed()) { workspace.close(); workspace = null; }
-          return {message:"Connection saved. Local data and running services are preserved."};
+          if (workspace && !workspace.isDestroyed()) {
+            workspace.close();
+            workspace = null;
+          }
+          return {
+            message:
+              "Connection saved. Local data and running services are preserved.",
+          };
         }
-        if (connection.mode === "remote" && !["info","open","users","autostart:on","autostart:off"].includes(command)) throw Error("Local service management is unavailable in server-client mode");
+        if (
+          connection.mode === "remote" &&
+          !["info", "open", "users", "autostart:on", "autostart:off"].includes(
+            command,
+          )
+        )
+          throw Error(
+            "Local service management is unavailable in server-client mode",
+          );
         if (command === "info" && connection.mode === "remote") {
-          const ready = await fetch(origin()+"/api/health",{redirect:"error",credentials:"omit",signal:AbortSignal.timeout(4000)}).then(async r => r.ok && (await r.json()).service === "kerncloud").catch(()=>false);
-          return {connection,network:{port:43100,gatewayPort:43200,exposure:"local",hostname:"localhost"},docker:{running:false,installed:false},services:[],ready,url:origin(),version:app.getVersion(),platform:process.platform,autostart:loginAutostart(app,process.platform),updates:updates.snapshot()};
+          const ready = await fetch(origin() + "/api/health", {
+            redirect: "error",
+            credentials: "omit",
+            signal: AbortSignal.timeout(4000),
+          })
+            .then(async (r) => r.ok && (await r.json()).service === "kerncloud")
+            .catch(() => false);
+          return {
+            connection,
+            network: {
+              port: 43100,
+              gatewayPort: 43200,
+              exposure: "local",
+              hostname: "localhost",
+            },
+            docker: { running: false, installed: false },
+            services: [],
+            ready,
+            url: origin(),
+            version: app.getVersion(),
+            platform: process.platform,
+            autostart: loginAutostart(app, process.platform),
+            updates: updates.snapshot(),
+          };
         }
         if (command === "info") {
           const docker = await dockerSetup.detectDocker();
@@ -185,13 +223,17 @@ else {
         if (command === "docker:setup") {
           if (busy) throw Error("Wait for the current operation to finish.");
           busy = true;
-          try { return await dockerSetup.installDocker({
-            shell,
-            directory: path.join(app.getPath("userData"), "installers"),
-            resources: __dirname,
-            log: (text) =>
-              launcher.webContents.send("local:log", redact(text, config)),
-          }); } finally { busy = false; }
+          try {
+            return await dockerSetup.installDocker({
+              shell,
+              directory: path.join(app.getPath("userData"), "installers"),
+              resources: __dirname,
+              log: (text) =>
+                launcher.webContents.send("local:log", redact(text, config)),
+            });
+          } finally {
+            busy = false;
+          }
         }
         if (command === "network:save") {
           if (busy) throw Error("Wait for the current operation to finish.");
@@ -209,7 +251,12 @@ else {
           const r = await fetch(origin() + "/api/health", {
             signal: AbortSignal.timeout(3000),
           }).catch(() => null);
-          if (!r?.ok) throw Error("Start local services first.");
+          if (!r?.ok)
+            throw Error(
+              connection.mode === "remote"
+                ? "The selected server is unavailable."
+                : "Start local services first.",
+            );
           if (workspace && !workspace.isDestroyed()) {
             workspace.show();
             if (command === "users")
@@ -349,7 +396,8 @@ else {
         trust: require("./update-trust.json"),
         isBusy: () => busy,
         onChange: (state) => {
-          if (!launcher.isDestroyed()) launcher.webContents.send("local:updates", state);
+          if (!launcher.isDestroyed())
+            launcher.webContents.send("local:updates", state);
         },
       });
       await updates.init();
@@ -392,7 +440,15 @@ else {
               sandbox: preferences.sandbox,
               contextIsolation: preferences.contextIsolation,
               nodeIntegration: preferences.nodeIntegration,
-              docker: await dockerSetup.detectDocker(),
+              docker:
+                connection.mode === "remote"
+                  ? null
+                  : await dockerSetup.detectDocker(),
+              connectionMode: connection.mode,
+              serverReady:
+                connection.mode === "remote"
+                  ? (await action("info")).ready
+                  : undefined,
               command: diagnosticCommand ?? null,
             },
             null,

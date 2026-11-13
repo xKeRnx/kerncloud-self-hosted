@@ -755,3 +755,51 @@
 .operator-metrics[open] > summary {
   margin-bottom: 14px;
 }
+
+/* Reusable workflows retain room between controls at narrow widths. */
+.starter-team-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 20px;
+  margin: 24px 0;
+}
+.starter-team-gallery .panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  min-width: 0;
+}
+.starter-team-gallery button {
+  margin-top: auto;
+  align-self: flex-start;
+}
+.project-results > .project-pages {
+  margin: 24px 0;
+}
+.project-pages .project-result-row {
+  flex-wrap: wrap;
+  padding-inline: 0;
+}
+.project-pages .project-page-history {
+  flex-basis: 100%;
+}
+.page-edit-form {
+  display: grid;
+  gap: 20px;
+  max-width: 840px;
+}
+.page-edit-form > label {
+  display: grid;
+  gap: 8px;
+}
+.page-edit-form > label.check {
+  display: flex;
+  align-items: flex-start;
+}
+.page-edit-form > button {
+  justify-self: start;
+}
+.task-workplace > p {
+  margin-bottom: 24px;
+}

@@ -24,7 +24,7 @@ node scripts/self-host.mjs doctor
 node scripts/self-host.mjs start
 ```
 
-Open http://localhost:3100/login. The first build needs internet. Your generated administrator email and password are stored in the private `.env` file; change the password after signing in. Connect your own model in the dashboard, create a project, set a task budget and start a small job. No AI calls are simulated when a model is missing.
+Open http://localhost:3100/login. The first start downloads the version-pinned release images and needs internet. A source checkout without an image manifest builds locally instead. Your generated administrator email and password are stored in the private `.env` file; change the password after signing in. Connect your own model in the dashboard, create a project, set a task budget and start a small job. No AI calls are simulated when a model is missing.
 
 You do not need `npm install` on the host for this source quick start. Windows also has `start-local.cmd`; Linux/macOS have `sh start-local.sh`. Before the first start, choose different ports with `init --port 4100 --gateway-port 4200` if needed. Existing configuration is preserved. Public registration is disabled by default.
 
@@ -39,11 +39,17 @@ You do not need `npm install` on the host for this source quick start. Windows a
 | Budget controls | Task limits, usage accounting and approved fallback models |
 | Skills and routines | Reusable reviewed workflows and scheduled work |
 | Bridge / connectors | Deliberately authorized device and environment access |
-| Models / MCP | Your provider connections, local models and approved tools |
+| Models / MCP | Chat Completions, Responses and Anthropic Messages adapters, local models and approved tools |
+| Work modes | Draft, single-agent execution or a team sharing one fixed budget |
+| Task workplace | See environment activity, pause and take control, then hand back |
+| Project pages | Versioned reports and dashboards with reviewed, expiring sharing links |
+| Starter teams | Reviewable Website studio, Research desk and Office assistant templates |
 
 <table><tr><td><img src="docs/assets/projects.svg" alt="Projects"><br>Project boundaries</td><td><img src="docs/assets/decisions.svg" alt="Decision inbox"><br>Central approvals</td></tr><tr><td><img src="docs/assets/agents.svg" alt="Agent team"><br>Agent activity</td><td><img src="docs/assets/timeline.svg" alt="Timeline"><br>Plans and execution</td></tr></table>
 
 Screenshots show the real application with neutral demonstration data. They are not customer testimonials or performance guarantees. Plans, actions and results are observable; private internal model reasoning is not an execution log.
+
+See [workflows and safety boundaries](docs/WORKFLOWS.md) for the new modes, engines, workplace, pages and team templates.
 
 ## Self-hosting and the business model
 
@@ -53,7 +59,7 @@ The local server grants new accounts a free self-hosted plan. It preserves resou
 
 ## Desktop
 
-The separate desktop launcher starts the Docker stack and opens an isolated dashboard window. Build targets: Windows NSIS `.exe`, Linux `.AppImage`/`.deb`, macOS `.dmg`/`.zip`. Docker is still required. Database volumes, configuration and access permissions live outside the application package.
+The separate desktop launcher can run the Docker stack on this computer **or connect to an existing KeRnCloud server**. Server-client mode requires no local Docker service. It opens an isolated dashboard window. Build targets: Windows NSIS `.exe`, Linux `.AppImage`/`.deb`, macOS `.dmg`/`.zip`. Docker is required on the machine hosting the server. Database volumes, configuration and access permissions live outside the application package.
 
 Desktop 0.38.3 and newer automatically check for verified app updates and can install them directly in the launcher. Your local data and permissions are preserved. See [desktop updates](docs/DESKTOP.md#update-and-uninstall).
 
