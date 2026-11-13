@@ -2384,7 +2384,7 @@ export async function handle(req: NextRequest, path: string) {
           ...state,
           work_apps: (
             await pool.query(
-              "SELECT id,provider,name,scopes,agent_ids,write_enabled,enabled,created_at FROM work_app_connections WHERE workspace_id=$1",
+              "SELECT id,provider,service_id,name,scopes,agent_ids,project_ids,write_enabled,enabled,created_at FROM work_app_connections WHERE workspace_id=$1",
               [w.id],
             )
           ).rows,

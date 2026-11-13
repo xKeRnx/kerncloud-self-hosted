@@ -521,8 +521,16 @@ export function appConnectionPlan(
   if (row.service_id && (!service || service.provider !== row.provider))
     throw new HttpError(400, "Invalid integration configuration");
   if (service) {
-    if (b.operation === "service_read" || b.operation === "service_write")
-      return integrationPlan(service.id, b.operation, b.input);
+    if (b.operation === "service_read" || b.operation === "service_write") {
+      try {
+        return integrationPlan(service.id, b.operation, b.input);
+      } catch {
+        throw new HttpError(
+          400,
+          "Invalid integration action or parameters. Load this connection's action fields with list_work_apps.",
+        );
+      }
+    }
     if (!service.operations?.includes(b.operation))
       throw new HttpError(403, "Operation outside this service grant");
   } else if (!appProviders.includes(row.provider as AppProvider))

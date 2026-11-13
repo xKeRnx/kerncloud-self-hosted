@@ -6,7 +6,7 @@ const key = z
   .string()
   .min(1)
   .max(300)
-  .regex(/^[A-Za-z0-9_][A-Za-z0-9_.!:@-]*$/);
+  .regex(/^[A-Za-z0-9_][A-Za-z0-9_.!:@=+-]*$/);
 const get = (url: string): IntegrationPlan => ({ url, method: "GET" });
 const post = (url: string, body: unknown): IntegrationPlan => ({
   url,
@@ -191,8 +191,7 @@ export function integrationPlan(
         notify_all: false,
       });
     case "airtable":
-      if (a === "bases")
-        return get("https://api.airtable.com/v0/meta/bases?pageSize=30");
+      if (a === "bases") return get("https://api.airtable.com/v0/meta/bases");
       if (a === "records")
         return get(
           `https://api.airtable.com/v0/${id("base_id")}/${id("table_id")}?pageSize=20&maxRecords=20`,
