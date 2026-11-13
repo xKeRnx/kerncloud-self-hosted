@@ -23,7 +23,8 @@ test("Social reads use fixed hosts and a single bounded page; cursors never beco
   );
   assert.throws(() => socialPlan({ ...s, platform: "../user" }));
   assert.equal(
-    socialPlan({ kind: "comments", target: "post-a/b" }).url,
+    socialPlan({ kind: "comments", platform: "facebook", target: "post-a/b" })
+      .url,
     "https://api.ayrshare.com/api/comments/post-a%2Fb",
   );
   assert.equal(
@@ -137,4 +138,21 @@ test("Analytics retain numeric provider fields and omit unknown, personal and no
     apiErrorMessage("en", "Provider leaked secret", 409),
     /secret/,
   );
+});
+
+test("Unsupported comment platforms are rejected before any priced request", () => {
+  assert.throws(() =>
+    socialPlan({ kind: "comments", platform: "threads", target: "p1" }),
+  );
+  for (const platform of ["threads", "pinterest"])
+    assert.equal(
+      sourceInput.safeParse({
+        kind: "comments",
+        platform,
+        connection_id: "82edfaba-a4cf-47c0-b88a-f8cd32728ab0",
+        label: "Invalid comment source",
+        target: "p1",
+      }).success,
+      false,
+    );
 });

@@ -10,6 +10,15 @@ export const socialPlatforms = [
   "threads",
   "pinterest",
 ] as const;
+export const commentPlatforms = [
+  "facebook",
+  "instagram",
+  "linkedin",
+  "tiktok",
+  "twitter",
+  "youtube",
+  "bluesky",
+] as const;
 export const remoteId = z
   .string()
   .min(1)
@@ -25,6 +34,15 @@ export const sourceInput = z
   })
   .strict()
   .superRefine((v, c) => {
+    if (
+      v.kind === "comments" &&
+      !(commentPlatforms as readonly string[]).includes(v.platform)
+    )
+      c.addIssue({
+        code: "custom",
+        message:
+          "This platform does not support comment collection through this provider",
+      });
     if (
       v.kind === "messages" &&
       !["facebook", "instagram", "twitter"].includes(v.platform)
@@ -45,14 +63,19 @@ export function socialPlan(source: any, cursor?: string | null) {
     return {
       url: root + "analytics/post",
       method: "POST",
-      body: { id: source.target, platforms: [source.platform] },
+      body: {
+        id: remoteId.parse(source.target),
+        platforms: [z.enum(socialPlatforms).parse(source.platform)],
+      },
     };
-  if (source.kind === "comments")
+  if (source.kind === "comments") {
+    z.enum(commentPlatforms).parse(source.platform);
     return {
       url:
         root + "comments/" + encodeURIComponent(remoteId.parse(source.target)),
       method: "GET",
     };
+  }
   const q = new URLSearchParams({ limit: "20", status: "active" });
   if (cursor) q.set("next", cursor);
   return {

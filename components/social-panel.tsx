@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { api } from "./api-client";
 import { useLanguage } from "./language";
 import { moneyText } from "../src/core/studio-research";
-import { socialPlatforms } from "../src/core/social";
+import { socialPlatforms, commentPlatforms } from "../src/core/social";
 import { RefreshCw, MessageSquare, ShieldCheck, BarChart3 } from "lucide-react";
 type Act = (body: any) => Promise<any>;
 const field = (f: FormData, k: string) => String(f.get(k) ?? "");
@@ -578,7 +578,9 @@ function SourceForm({ data, analytics, act, busy }: any) {
           <select name="platform">
             {(kind === "messages"
               ? ["facebook", "instagram", "twitter"]
-              : socialPlatforms
+              : kind === "comments"
+                ? commentPlatforms
+                : socialPlatforms
             ).map((p) => (
               <option key={p}>{p}</option>
             ))}
