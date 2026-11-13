@@ -227,7 +227,7 @@ function setControls() {
     button.disabled = disabled;
   }
   for (const field of document.querySelectorAll(
-    "#network-form input,#network-form select,#network-form button,#autostart",
+    "#network-form input,#network-form select,#network-form button,#connection-form input,#connection-form select,#connection-form button,#autostart",
   ))
     field.disabled = busy || appInstalling;
   renderUpdates();
@@ -534,11 +534,21 @@ $("#connection-mode").addEventListener("change", (e) => {
 $("#connection-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (busy) return;
+  const next = {
+    mode: $("#connection-mode").value,
+    url: $("#server-address").value,
+  };
+  busy = true;
+  setControls();
+  text(
+    $("#connection-message"),
+    t("Saving connection…", "Verbindung wird gespeichert…"),
+  );
   try {
-    await window.kernLocal.action("connection:save", {
-      mode: $("#connection-mode").value,
-      url: $("#server-address").value,
-    });
+    // Settle the previous mode's status read before replacing its connection.
+    // Otherwise its late reply can overwrite the newly selected address.
+    if (refreshing) await refreshing.catch(() => {});
+    await window.kernLocal.action("connection:save", next);
     await refresh(true);
     text(
       $("#connection-message"),
@@ -549,5 +559,8 @@ $("#connection-form").addEventListener("submit", async (e) => {
     );
   } catch (error) {
     text($("#connection-message"), error.message);
+  } finally {
+    busy = false;
+    setControls();
   }
 });

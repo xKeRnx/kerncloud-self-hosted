@@ -27,14 +27,14 @@ const fixture = async (seed) => {
     if(!new URL(process.env.DATABASE_URL).pathname.endsWith('_test'))throw Error('Disposable database required');
     const p=new pg.Pool({connectionString:process.env.DATABASE_URL});
     try {
-      const w=(await p.query('SELECT id FROM workspaces ORDER BY created_at LIMIT 1')).rows[0].id;
+      const w=(await p.query('SELECT id FROM workspaces w WHERE EXISTS(SELECT 1 FROM agents a WHERE a.workspace_id=w.id) ORDER BY created_at LIMIT 1')).rows[0].id;
       if(${JSON.stringify(seed)}){
         const project=(await p.query('SELECT id FROM workspace_projects WHERE workspace_id=$1 LIMIT 1',[w])).rows[0].id;
         const agent=(await p.query('SELECT id FROM agents WHERE workspace_id=$1 LIMIT 1',[w])).rows[0].id;
         const model=randomUUID(),host=randomUUID(),env=randomUUID(),run=randomUUID(),task=randomUUID();
         await p.query("INSERT INTO model_offerings(id,workspace_id,name,provider_name,endpoint,model,secret,input_rate,output_rate,active,monitor_enabled) VALUES($1,$2,'image-lifecycle-fixture','Fixture','https://fixture.invalid/v1','fixture',$3,0,0,false,false)",[model,w,encrypt('isolated-image-fixture-secret')]);
         await p.query("INSERT INTO infrastructure_hosts(id,name,kind,token_hash,enabled) VALUES($1,'image-lifecycle-fixture','docker','fixture-only',false)",[host]);
-        await p.query("INSERT INTO customer_environments(id,workspace_id,project_id,host_id,template_id,name,status,self_service,agent_permissions,agent_ids) VALUES($1,$2,$3,$4,'development','image-lifecycle-fixture','stopped',false,'[\"files\",\"exec\"]',$5)",[env,w,project,host,JSON.stringify([agent])]);
+        await p.query("INSERT INTO customer_environments(id,workspace_id,project_id,host_id,template_id,name,status,self_service,agent_permissions,agent_ids) VALUES($1,$2,$3,$4,'development','image-lifecycle-fixture','stopped',false,$5,$6)",[env,w,project,host,JSON.stringify(['files','exec']),JSON.stringify([agent])]);
         await p.query("INSERT INTO runs(id,workspace_id,project_id,goal,status,max_steps) VALUES($1,$2,$3,'Image lifecycle fixture','completed',10)",[run,w,project]);
         await p.query("INSERT INTO tasks(id,run_id,workspace_id,agent_id,title,instructions,status) VALUES($1,$2,$3,$4,'Fixture','Fixture','completed')",[task,run,w,agent]);
         await p.query("INSERT INTO artifacts(id,workspace_id,run_id,task_id,name,content) VALUES($1,$2,$3,$4,'image-lifecycle-fixture.txt','Persistent project result')",[randomUUID(),w,run,task]);
@@ -59,7 +59,14 @@ const fixture = async (seed) => {
     ),
     { cwd: projectRoot, capture: true },
   );
-  assert.equal(result.status, 0, "Isolated fixture execution failed");
+  assert.equal(
+    result.status,
+    0,
+    "Isolated fixture execution failed: " +
+      result.stderr
+        .replace(/postgresql:\/\/[^\s]+/g, "[redacted]")
+        .slice(-3000),
+  );
   assert.match(result.stdout.trim(), /^[a-f0-9]{64}$/);
   return result.stdout.trim();
 };
