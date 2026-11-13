@@ -1,0 +1,47 @@
+name: Publish immutable server images
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  images:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Version
+        id: version
+        run: node -e 'console.log("value="+require("./package.json").version)' >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        id: app
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/xkernx/kerncloud-self-hosted:${{ steps.version.outputs.value }}
+          cache-from: type=gha,scope=app
+          cache-to: type=gha,scope=app,mode=max
+      - uses: docker/build-push-action@v6
+        id: validator
+        with:
+          context: .
+          file: environments/validator.Dockerfile
+          push: true
+          tags: ghcr.io/xkernx/kerncloud-validator:${{ steps.version.outputs.value }}
+          cache-from: type=gha,scope=validator
+          cache-to: type=gha,scope=validator,mode=max
+      - name: Record immutable release images
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+          APP_DIGEST: ${{ steps.app.outputs.digest }}
+          VALIDATOR_DIGEST: ${{ steps.validator.outputs.digest }}
+        run: node -e "require('fs').writeFileSync('distribution-images.json',JSON.stringify({schema:1,version:process.env.VERSION,images:{app:'ghcr.io/xkernx/kerncloud-self-hosted@'+process.env.APP_DIGEST,validator:'ghcr.io/xkernx/kerncloud-validator@'+process.env.VALIDATOR_DIGEST}},null,2))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: immutable-container-manifest
+          path: distribution-images.json

@@ -43,7 +43,8 @@
       "docker-install-linux.sh",
       "updates.cjs",
       "update-trust.json",
-      "update-native.json"
+      "update-native.json",
+      "connection.cjs"
     ],
     "extraResources": [
       {

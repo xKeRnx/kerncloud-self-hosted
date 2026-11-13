@@ -89,6 +89,12 @@ function renderProgress(context, state) {
   node.querySelector(".activity-track").hidden = !!state.finishedAt;
 }
 function renderServices() {
+  if (info?.connection?.mode === "remote") {
+    text($("#runtime-state"),info.ready ? t("Connected","Verbunden") : t("Server unavailable","Server nicht erreichbar"));
+    text($("#service-description"),info.url);
+    setControls();
+    return;
+  }
   if (!info) return;
   const state = window.localProgress.serviceSummary(info.services, info.ready),
     names = {
@@ -206,6 +212,7 @@ function setControls() {
             "stopped";
       if (["open", "users"].includes(command)) disabled = !info.ready;
     }
+    if (info?.connection?.mode === "remote" && !["open","users"].includes(button.dataset.action)) disabled = true;
     button.disabled = disabled;
   }
   for (const field of document.querySelectorAll(
@@ -219,6 +226,14 @@ async function refresh(fields = false) {
   refreshing = (async () => {
     info = await window.kernLocal.action("info");
     updateState = info.updates;
+    const remote = info.connection?.mode === "remote";
+    for (const node of document.querySelectorAll("[data-local-only]")) node.hidden = remote;
+    for (const button of $("#services-panel").querySelectorAll("[data-action]")) button.hidden = remote;
+    if (fields) {
+      $("#connection-mode").value = info.connection?.mode ?? "local";
+      $("#server-address").value = info.connection?.url ?? "";
+      $("#server-address-row").hidden = !remote;
+    }
     text($("#version"), "Version " + info.version);
     text($("#origin"), info.url);
     $("#autostart").checked = info.autostart;
@@ -391,7 +406,7 @@ for (const button of document.querySelectorAll("[data-action]"))
     action(
       button.dataset.action,
       undefined,
-      button.closest("[data-context]").dataset.context,
+      button.closest("[data-context]")?.dataset.context ?? "services",
     ),
   );
 $("#language").addEventListener("change", (e) => {
@@ -448,3 +463,10 @@ refresh(true)
   })
   .catch((e) => message("services", e.message, true));
 window.kernLocal.ready?.();
+
+$("#connection-mode").addEventListener("change",e => {$("#server-address-row").hidden = e.target.value !== "remote";});
+$("#connection-form").addEventListener("submit", async e => {
+ e.preventDefault(); if(busy)return;
+ try {await window.kernLocal.action("connection:save",{mode:$("#connection-mode").value,url:$("#server-address").value});await refresh(true);text($("#connection-message"),t("Connection saved. Your local installation is preserved.","Verbindung gespeichert. Deine lokale Installation bleibt erhalten."));}
+ catch(error){text($("#connection-message"),error.message);}
+});

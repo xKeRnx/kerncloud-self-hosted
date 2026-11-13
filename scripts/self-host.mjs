@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { imageDistribution } from "./image-distribution.mjs";
 import { ensureLocalNetworks, networkSettings } from "./local-network.mjs";
 import path from "node:path";
 import { randomBytes, createHash } from "node:crypto";
@@ -79,7 +80,7 @@ export function prepare(root = projectRoot, options = {}) {
     KERNCLOUD_PORT: String(port),
     KERNCLOUD_GATEWAY_PORT: String(gatewayPort),
     KERNCLOUD_DB_NAME: database,
-    KERNCLOUD_IMAGE: "kerncloud-selfhost:0.38.0",
+    KERNCLOUD_IMAGE: "kerncloud-selfhost:0.39.0",
     KERNCLOUD_BIND_ADDRESS: "127.0.0.1",
     POSTGRES_PASSWORD: password,
     DATABASE_URL:
@@ -105,12 +106,11 @@ export function prepare(root = projectRoot, options = {}) {
   return { created: true, config };
 }
 export function currentImage(root = projectRoot) {
-  const version = JSON.parse(
-    fs.readFileSync(path.join(root, "package.json"), "utf8"),
-  ).version;
-  if (!/^\d+\.\d+\.\d+$/.test(version))
-    throw Error("Invalid installed release version");
-  return "kerncloud-selfhost:" + version;
+  return imageDistribution(root, fs.existsSync(path.join(root,".env")) ? fs.existsSync(path.join(root,".env")) ? parseEnv(fs.readFileSync(path.join(root,".env"),"utf8")) : {} : {}).app;
+}
+function imageEnvironment(root) {
+  const distribution = imageDistribution(root, fs.existsSync(path.join(root,".env")) ? parseEnv(fs.readFileSync(path.join(root,".env"),"utf8")) : {});
+  return {...process.env, KERNCLOUD_IMAGE:distribution.app, KERNCLOUD_VALIDATOR_IMAGE:distribution.validator};
 }
 export function configureNetwork(root, input) {
   const config = prepare(root).config,
@@ -144,7 +144,7 @@ export function dockerArgs(config, ...args) {
 export async function runDocker(args, root = projectRoot) {
   const r = await runProcess("docker", args, {
     cwd: root,
-    env: { ...process.env, KERNCLOUD_IMAGE: currentImage(root) },
+    env: imageEnvironment(root),
   });
   if (r.status !== 0)
     throw Error(
@@ -156,7 +156,7 @@ async function captureDocker(args, root = projectRoot) {
     cwd: root,
     capture: true,
     timeout: 20000,
-    env: { ...process.env, KERNCLOUD_IMAGE: currentImage(root) },
+    env: imageEnvironment(root),
   });
 }
 export async function doctor(root = projectRoot) {
@@ -285,7 +285,9 @@ export async function main(
     ensureLocalNetworks(root, config);
     report({ phase: "build" });
     if (!(await imagesAvailable(root, config))) {
-      await compose("--progress", "plain", "build");
+      if (imageDistribution(root, config).mode === "registry") await compose("pull", "postgres");
+      if (imageDistribution(root, config).mode === "registry") await compose("pull", "app", "worker", "scheduler", "gateway", "object-storage", "artifact-validator");
+      else await compose("--progress", "plain", "build");
     } else {
       report({ phase: "build", reusedImages: true });
       console.log(
@@ -352,7 +354,9 @@ export async function main(
     report({ phase: "prepare" });
     ensureLocalNetworks(root, config);
     report({ phase: "build" });
-    await compose("--progress", "plain", "build");
+    if (imageDistribution(root, config).mode === "registry") await compose("pull", "postgres");
+      if (imageDistribution(root, config).mode === "registry") await compose("pull", "app", "worker", "scheduler", "gateway", "object-storage", "artifact-validator");
+      else await compose("--progress", "plain", "build");
     report({ phase: "services" });
     await compose(
       "up",

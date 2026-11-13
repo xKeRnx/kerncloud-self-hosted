@@ -46,6 +46,15 @@
           access permissions stay in your installation.
         </p>
       </section>
+      <section class="panel" id="connection-panel">
+        <h2 data-en="Where is your workspace?" data-de="Wo ist dein Workspace?">Where is your workspace?</h2>
+        <form id="connection-form"><label><span data-en="Connection" data-de="Verbindung">Connection</span>
+          <select id="connection-mode"><option value="local" data-en="Run on this computer" data-de="Auf diesem Rechner betreiben">Run on this computer</option><option value="remote" data-en="Connect to an existing server" data-de="Mit vorhandenem Server verbinden">Connect to an existing server</option></select></label>
+          <label id="server-address-row" hidden><span data-en="Server HTTPS address" data-de="HTTPS-Serveradresse">Server HTTPS address</span><input id="server-address" type="url" placeholder="https://workspace.example.com" /></label>
+          <div class="actions"><button type="submit" data-en="Save connection" data-de="Verbindung speichern">Save connection</button><button type="button" data-action="open" data-en="Open workspace" data-de="Workspace öffnen">Open workspace</button></div>
+          <p id="connection-message" role="status"></p>
+        </form>
+      </section>
       <section class="panel" id="services-panel" data-context="services">
         <div class="section-title">
           <h2 data-en="Local services" data-de="Lokale Dienste">
@@ -108,7 +117,7 @@
           installation and preserves its data and permissions.
         </p>
       </section>
-      <section class="panel" data-context="setup">
+      <section class="panel" data-context="setup" data-local-only>
         <details id="setup-details">
           <summary
             data-en="First-time setup & Docker"
@@ -172,7 +181,7 @@
           </div>
         </details>
       </section>
-      <section class="panel" data-context="network">
+      <section class="panel" data-context="network" data-local-only>
         <h2 data-en="Network & ports" data-de="Netzwerk & Ports">
           Network & ports
         </h2>
@@ -272,7 +281,7 @@
           Downloaded updates can install the next time you open the app. Linux may request system permission. Local services keep running; your configuration, data and access permissions stay in place. Apply a new server version separately with Update local server, which creates a backup first.
         </p>
       </section>
-      <section class="panel" data-context="maintenance">
+      <section class="panel" data-context="maintenance" data-local-only>
         <h2 data-en="Manage your installation" data-de="Installation verwalten">
           Manage your installation
         </h2>

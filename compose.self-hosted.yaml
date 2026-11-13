@@ -16,7 +16,7 @@ services:
     restart: unless-stopped
   app:
     build: .
-    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.39.0}
     tmpfs: ["/tmp:size=256m,mode=1777"]
     env_file: .env
     environment:
@@ -46,7 +46,7 @@ services:
       retries: 20
     restart: unless-stopped
   worker:
-    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.39.0}
     command: ["npm", "run", "worker"]
     environment:
       PLATFORM_URL: http://app:3100
@@ -58,7 +58,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
   integration:
-    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.39.0}
     profiles: [test]
     command: ["npm", "run", "test:integration"]
     env_file: .env
@@ -73,7 +73,7 @@ services:
       postgres:
         condition: service_healthy
   infrastructure:
-    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.39.0}
     profiles: [infrastructure]
     user: "0:0"
     command: ["npm", "run", "infrastructure"]
@@ -96,7 +96,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
   gateway:
-    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.39.0}
     command: ["node", "--import", "tsx", "src/gateway/server.ts"]
     env_file: .env
     environment:
@@ -126,7 +126,7 @@ services:
       app:
         condition: service_healthy
   autoscaler:
-    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.39.0}
     profiles: [autoscale]
     user: "0:0"
     command: [node, --import, tsx, src/autoscaler.ts]
@@ -137,7 +137,7 @@ services:
       AUTOSCALE_MIN: "0"
       AUTOSCALE_MAX: "4"
       AUTOSCALE_NETWORK: ${KERNCLOUD_COMPOSE_PROJECT}_default
-      AUTOSCALE_WORKER_IMAGE: kerncloud-selfhost:0.38.0
+      AUTOSCALE_WORKER_IMAGE: kerncloud-selfhost:0.39.0
     volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
     read_only: true
     tmpfs: [/tmp]
@@ -149,7 +149,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
   scheduler:
-    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.39.0}
     command: ["node", "--import", "tsx", "src/scheduler.ts"]
     env_file: .env
     environment:
@@ -167,7 +167,7 @@ services:
     restart: unless-stopped
     networks: [default, validation]
   object-storage:
-    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.38.0}
+    image: ${KERNCLOUD_IMAGE:-kerncloud-selfhost:0.39.0}
     command: ["node", "--import", "tsx", "src/storage/server.ts"]
     environment:
       OBJECT_STORAGE_ROOT: /data
@@ -194,7 +194,7 @@ services:
     build:
       context: .
       dockerfile: environments/validator.Dockerfile
-    image: kerncloud-selfhost-validator:0.38.0
+    image: ${KERNCLOUD_VALIDATOR_IMAGE:-kerncloud-selfhost-validator:0.39.0}
     environment:
       VALIDATOR_TOKEN: ${WORKER_TOKEN:?Run npm run setup first}
     networks: [validation]
