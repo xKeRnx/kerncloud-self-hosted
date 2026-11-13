@@ -161,6 +161,8 @@ export function ProjectContext({ state }: { state: Snapshot }) {
           ["projects", t("Übersicht", "Overview")],
           ["tasks", t("Aufträge", "Tasks")],
           ["files", t("Ergebnisse & Dateien", "Results & files")],
+          ["studio", t("Content-Studio", "Content Studio")],
+          ["research", t("Recherche", "Research")],
           ["memory", t("Wissen", "Knowledge")],
           ["timeline", t("Planung", "Planning")],
         ].map(([key, label]) => (

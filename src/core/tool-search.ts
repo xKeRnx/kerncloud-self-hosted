@@ -4,6 +4,13 @@ const normalize = (v: string) =>
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 const aliases: Record<string, string> = {
+  research:"read_research_job research_query save_research_report",
+  recherche:"read_research_job research_query save_research_report",
+  tavily:"read_research_job research_query",
+  brave:"read_research_job research_query",
+  exa:"read_research_job research_query",
+  studio:"save_content_draft",
+  beitrag:"save_content_draft",
   organigramm: "propose_organisation project_status",
   spezialist: "request_agent",
   agenten: "request_agent project_status",

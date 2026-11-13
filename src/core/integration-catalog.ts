@@ -10,6 +10,7 @@ export type IntegrationAction = {
   fields: IntegrationField[];
 };
 export type Integration = {
+  testRequiresBudget?: boolean;
   id: string;
   name: string;
   provider: string;
@@ -646,6 +647,32 @@ for (const integration of integrations)
     integration.actions = serviceActions[integration.id];
     integration.test.input = { action: integration.actions[0].id };
   }
+for (const [id, name, docs] of [
+  [
+    "tavily",
+    "Tavily",
+    "https://docs.tavily.com/documentation/api-reference/endpoint/search",
+  ],
+  [
+    "brave",
+    "Brave Search",
+    "https://api-dashboard.search.brave.com/app/documentation/web-search/get-started",
+  ],
+  ["exa", "Exa", "https://exa.ai/docs/reference/search"],
+]) {
+  integrations.push({
+    ...token(
+      id,
+      name,
+      "Research & data",
+      "Budgeted search in the project's Research area. A confirmed price ceiling and fixed request/cost limits are required.",
+      docs,
+      [action("search", "Budgeted search", [field("query", "Search query")])],
+      "search",
+    ),
+    testRequiresBudget: true,
+  });
+}
 export const tokenProviders = integrations
   .filter((i) => i.auth === "token")
   .map((i) => i.provider);
@@ -653,11 +680,24 @@ export const integrationById = (id: string | null | undefined) =>
   integrations.find((i) => i.id === id);
 export function integrationManifest(serviceId: string | null | undefined) {
   const i = integrationById(serviceId);
+  if (i?.testRequiresBudget)
+    return {
+      service: i.id,
+      operations: [],
+      actions: [],
+      note: "Use research_query with an existing project research job and approved fixed budgets",
+    };
   return i
     ? {
         service: i.id,
         operations: i.operations ?? [],
-        actions: i.actions,
+        actions:
+          i.id === "ayrshare" ? i.actions.filter((a) => !a.write) : i.actions,
+        ...(i.id === "ayrshare"
+          ? {
+              note: "Use save_content_draft for publication review, scheduling and fixed budget enforcement in Content Studio",
+            }
+          : {}),
         operation_fields: Object.fromEntries(
           (i.operations ?? []).map((operation) => [
             operation,

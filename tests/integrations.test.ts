@@ -152,6 +152,15 @@ test("every listed adapter has executable read tests and a fixed-origin bounded 
     integrations.length,
   );
   for (const service of integrations) {
+    if (service.testRequiresBudget) {
+      assert.throws(() =>
+        integrationPlan(service.id, "service_read", {
+          action: "search",
+          query: "fixture",
+        }),
+      );
+      continue;
+    }
     if (service.test.operation === "service_read") {
       const plan = integrationPlan(
         service.id,

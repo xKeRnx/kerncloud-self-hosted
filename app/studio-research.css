@@ -1,0 +1,244 @@
+.studio-hub {
+  display: grid;
+  gap: 24px;
+  min-width: 0;
+}
+.studio-hub .workspace-page-heading {
+  margin: 0;
+}
+.studio-hub .studio-card {
+  padding: 24px;
+  margin: 0;
+  border-radius: 16px;
+  min-width: 0;
+}
+.studio-card > summary {
+  font-weight: 650;
+  cursor: pointer;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  flex-wrap: wrap;
+  line-height: 1.7;
+}
+.studio-card[open] > summary {
+  margin-bottom: 22px;
+}
+.studio-hub form,
+.studio-review {
+  display: grid;
+  gap: 18px;
+}
+.studio-hub h2,
+.studio-hub h3 {
+  margin: 0 0 12px;
+}
+.studio-hub .button-row,
+.studio-review .button-row {
+  margin: 0;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.studio-hub button,
+.studio-review button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.studio-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+.studio-hub .studio-metric {
+  padding: 22px;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.studio-metric > span {
+  font-size: 13px;
+  color: var(--ui-muted);
+}
+.studio-metric > strong {
+  font-size: 25px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.studio-budget-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+.studio-budget-grid form {
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  padding: 20px;
+}
+.studio-budget-grid h3 {
+  font-size: 16px;
+}
+.studio-networks {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.studio-networks legend {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.studio-networks > .check-row {
+  border: 1px solid var(--ui-line);
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin: 0;
+}
+.studio-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.studio-card-top > div {
+  min-width: 0;
+  flex: 1 1 160px;
+}
+.studio-card-top h2 {
+  overflow-wrap: anywhere;
+}
+.studio-card-top > span {
+  color: var(--ui-muted);
+  font-size: 13px;
+}
+.studio-status {
+  display: inline-flex;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 5px 9px;
+  border: 1px solid var(--ui-line);
+  border-radius: 6px;
+  color: var(--ui-muted);
+  margin-bottom: 10px;
+}
+.studio-posts {
+  display: grid;
+  gap: 22px;
+}
+.studio-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  padding: 18px;
+  background: var(--ui-subtle);
+  color: var(--ui-ink);
+  border: 1px solid var(--ui-line);
+  border-radius: 10px;
+  line-height: 1.75;
+  font: inherit;
+}
+.studio-post-preview > a {
+  display: block;
+  overflow-wrap: anywhere;
+  margin: 9px 0;
+  font-size: 13px;
+}
+.studio-review {
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid var(--ui-line);
+}
+.studio-review p {
+  margin: 0;
+  line-height: 1.7;
+}
+.studio-review .check-row {
+  align-items: flex-start;
+  line-height: 1.6;
+}
+.studio-review input[type="checkbox"] {
+  flex: none;
+  margin-top: 4px;
+}
+.studio-receipts {
+  display: grid;
+  gap: 0;
+}
+.studio-receipts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--ui-line);
+  padding: 14px 0;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.research-source {
+  border-top: 1px solid var(--ui-line);
+  padding-top: 18px;
+  margin-top: 18px;
+  line-height: 1.75;
+}
+.research-source a {
+  font-weight: 650;
+}
+.research-source p {
+  white-space: pre-wrap;
+  font-size: 14px;
+}
+.research-source small {
+  color: var(--ui-muted);
+  overflow-wrap: anywhere;
+}
+.studio-empty {
+  display: grid;
+  justify-items: center;
+  text-align: center;
+  gap: 12px;
+}
+.studio-inbox {
+  margin: 0 0 24px;
+}
+.studio-inbox > .studio-card {
+  padding: 24px;
+}
+.studio-hub .form-note {
+  line-height: 1.75;
+}
+.studio-hub textarea {
+  min-width: 0;
+  width: 100%;
+}
+@media (max-width: 850px) {
+  .studio-budget-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studio-hub .studio-card {
+    padding: 20px;
+  }
+  .studio-budget-grid form {
+    padding: 16px;
+  }
+  .studio-preview {
+    padding: 14px;
+  }
+  .studio-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .studio-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .studio-card-top {
+    display: block;
+  }
+  .studio-card-top > span {
+    display: block;
+    margin-top: 8px;
+  }
+}

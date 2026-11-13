@@ -47,6 +47,12 @@ import {
 } from "./work-apps.ts";
 import { projects } from "./projects.ts";
 import {
+  studioSnapshot,
+  studioAction,
+  researchJob,
+  researchVersion,
+} from "./content-research.ts";
+import {
   saveTokenIntegration,
   checkIntegration,
 } from "./integration-connections.ts";
@@ -57,7 +63,7 @@ import {
 } from "./environment-budgets.ts";
 import { searchKnowledge, readKnowledge } from "./knowledge-search.ts";
 import { briefings, tickBriefings } from "./briefings.ts";
-import { manageTeam, acceptTeamInvite } from "./team.ts";
+import { manageTeam, acceptTeamInvite, workspaceRole } from "./team.ts";
 import { workspacePermission } from "../core/workspace-permissions.ts";
 import { listDecisions, respondDecision } from "./decisions.ts";
 import { landingAccount } from "./landing-account.ts";
@@ -700,7 +706,7 @@ export async function handle(req: NextRequest, path: string) {
       return NextResponse.json({
         status: "ok",
         service: "kerncloud",
-        version: "0.41.0",
+        version: "0.42.0",
         edition: selfHostedEdition ? "self-hosted" : "operator",
       });
     if (path === "billing/webhook" && req.method === "POST")
@@ -1235,6 +1241,103 @@ export async function handle(req: NextRequest, path: string) {
       return NextResponse.json(
         await checkIntegration(user.id, workspace.id, body),
       );
+    if (path === "studio" && method === "GET")
+      return NextResponse.json(
+        await studioSnapshot(user.id, workspace.id, workspace.project_id!),
+      );
+    if (path === "studio/action" && method === "POST")
+      return NextResponse.json(
+        await studioAction(user.id, workspace.id, workspace.project_id!, body),
+      );
+    if (path === "studio/reviews" && method === "GET")
+      return NextResponse.json({
+        role: await workspaceRole(user.id, workspace.id),
+        posts: (
+          await pool.query(
+            "SELECT p.*,pr.name project_name,co.name connection_name,pp.price_micro_usd,pp.revision price_revision,co.revision connection_revision,eb.revision budget_revision FROM content_posts p JOIN workspace_projects pr ON pr.id=p.project_id LEFT JOIN work_app_connections co ON co.id=p.connection_id LEFT JOIN project_provider_prices pp ON pp.project_id=p.project_id AND pp.connection_id=p.connection_id LEFT JOIN project_external_budgets eb ON eb.project_id=p.project_id WHERE p.workspace_id=$1 AND p.status='review' ORDER BY p.updated_at DESC LIMIT 100",
+            [workspace.id],
+          )
+        ).rows,
+      });
+    if (path === "studio/review-action" && method === "POST") {
+      const b = z
+        .object({
+          project_id: z.string().uuid(),
+          action: z.enum(["approve", "reject"]),
+          id: z.string().uuid(),
+          expected_revision: z.number().int().positive(),
+          confirm: z.boolean(),
+          expected_connection_revision: z.number().int().optional(),
+          expected_price_revision: z.number().int().optional(),
+          expected_budget_revision: z.number().int().optional(),
+          expected_price: z
+            .string()
+            .regex(/^\d{1,12}$/)
+            .optional(),
+        })
+        .strict()
+        .parse(body);
+      const { project_id, ...action } = b;
+      return NextResponse.json(
+        await studioAction(user.id, workspace.id, project_id, action),
+      );
+    }
+    if (path === "research/version" && method === "GET")
+      return NextResponse.json(
+        await researchVersion(
+          workspace.id,
+          workspace.project_id!,
+          z.string().uuid().parse(req.nextUrl.searchParams.get("id")),
+          z.coerce
+            .number()
+            .int()
+            .positive()
+            .parse(req.nextUrl.searchParams.get("revision")),
+        ),
+      );
+    if (path === "research/job" && method === "GET")
+      return NextResponse.json(
+        await researchJob(
+          workspace.id,
+          workspace.project_id!,
+          z.string().uuid().parse(req.nextUrl.searchParams.get("id")),
+        ),
+      );
+    if (path === "research/export" && method === "GET") {
+      const { job, queries } = await researchJob(
+        workspace.id,
+        workspace.project_id!,
+        z.string().uuid().parse(req.nextUrl.searchParams.get("id")),
+      );
+      const text =
+        "# " +
+        job.title +
+        "\n\n" +
+        job.report +
+        "\n\n## Sources\n\n" +
+        queries
+          .filter((q: any) => q.status === "done")
+          .flatMap((q: any) =>
+            q.results.map(
+              (s: any) =>
+                "- " +
+                s.title +
+                " — " +
+                s.url +
+                " (retrieved " +
+                new Date(q.finished_at).toISOString() +
+                ")",
+            ),
+          )
+          .join("\n");
+      return new NextResponse(text, {
+        headers: {
+          "Content-Type": "text/markdown; charset=utf-8",
+          "Content-Disposition": 'attachment; filename="research-report.md"',
+          "Cache-Control": "private, no-store",
+        },
+      });
+    }
     if (path === "suite/apps")
       return NextResponse.json(
         await workApps(

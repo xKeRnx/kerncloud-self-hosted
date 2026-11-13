@@ -84,6 +84,17 @@ export async function checkIntegration(
   if (!["owner", "admin"].includes(await workspaceRole(actor, workspace)))
     throw new HttpError(403, "Workspace administration required");
   const { id } = z.object({ id: z.string().uuid() }).strict().parse(body);
+  const testService = (
+    await pool.query(
+      "SELECT service_id FROM work_app_connections WHERE id=$1 AND workspace_id=$2",
+      [id, workspace],
+    )
+  ).rows[0];
+  if (integrationById(testService?.service_id)?.testRequiresBudget)
+    throw new HttpError(
+      409,
+      "Run a budgeted query in the project's Research area to test this provider",
+    );
   const row = await transaction(async (c) => {
     const row = (
       await c.query(

@@ -1,6 +1,6 @@
 {
   "name": "kerncloud-local",
-  "version": "0.41.0",
+  "version": "0.42.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -22,6 +22,7 @@
     "test:environment": "node --import tsx scripts/test-docker-environment.ts",
     "format": "prettier --write app components src scripts tests package.json tsconfig.json next.config.ts compose.yaml compose.worker.yaml README.md docs",
     "gateway": "node --env-file-if-exists=.env --import tsx src/gateway/server.ts",
+    "publisher": "node --env-file-if-exists=.env --import tsx src/publisher.ts",
     "scheduler": "node --env-file-if-exists=.env --import tsx src/scheduler.ts",
     "storage": "node --import tsx src/storage/server.ts",
     "storage:migrate": "node --env-file-if-exists=.env --import tsx scripts/migrate-object-storage.ts",

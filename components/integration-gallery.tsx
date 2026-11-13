@@ -578,7 +578,7 @@ export function IntegrationGallery({
                       <button
                         type="button"
                         className="secondary"
-                        disabled={busy}
+                        disabled={busy || !!service?.testRequiresBudget}
                         onClick={async () => {
                           const r = await act("suite/apps/check", { id: c.id });
                           if (r) setNotice(r.message);

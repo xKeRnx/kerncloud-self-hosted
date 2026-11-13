@@ -8,6 +8,8 @@ export const workspacePaths = {
   projectSettings: "/project-settings",
   worklog: "/worklog",
   apps: "/apps",
+  studio: "/studio",
+  research: "/research",
   projects: "/projects",
   timeline: "/timeline",
   organisation: "/organisation",
@@ -50,7 +52,7 @@ export function resolveWorkspacePath(pathname: string): {
     if (path === value) return { view: view as WorkspaceView };
   }
   const subproject =
-    /^\/projects\/([a-zA-Z0-9_-]{1,100})\/(tasks|chat|files|memory|knowledge|timeline|routines|environments|settings)$/.exec(
+    /^\/projects\/([a-zA-Z0-9_-]{1,100})\/(tasks|chat|files|memory|knowledge|timeline|routines|environments|settings|studio|research)$/.exec(
       path,
     );
   if (subproject)
@@ -75,6 +77,8 @@ export function resolveWorkspacePath(pathname: string): {
 }
 
 export const projectViews: WorkspaceView[] = [
+  "studio",
+  "research",
   "projects",
   "tasks",
   "chat",

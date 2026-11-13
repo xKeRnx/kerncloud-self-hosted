@@ -20,6 +20,7 @@ import {
   OrganisationChart,
 } from "./organisation-suite";
 import { WorkAppsPanel, ProjectsPanel, QualityPanel } from "./workspace-suite";
+import { ContentResearch } from "./content-research";
 import {
   TeamPanel,
   KnowledgePanel,
@@ -184,6 +185,8 @@ const labels: Record<string, string> = {
   suspended: "Gesperrt",
 };
 const viewLabels: Record<View, string> = {
+  studio: "Content Studio",
+  research: "Research",
   work: "Alle Aufträge",
   settings: "Einstellungen",
   hosts: "Eigene Rechner & Standorte",
@@ -1332,6 +1335,8 @@ export function WorkspaceApp({
                       {
                         overview: t("Start", "Home"),
                         apps: t("Integrationen", "Integrations"),
+                        studio: t("Content-Studio", "Content Studio"),
+                        research: t("Recherche-Zentrale", "Research"),
                         work: t("Alle Aufträge", "All tasks"),
                         settings: t("Einstellungen", "Settings"),
                         budgets: t(
@@ -1510,6 +1515,14 @@ export function WorkspaceApp({
               <ProjectContext state={s} />
             )}
           {view === "settings" && <SettingsHub state={s} />}
+          {(view === "studio" || view === "research") && (
+            <ContentResearch
+              key={s.workspace.id + ":" + s.workspace.project_id + ":" + view}
+              workspaceId={s.workspace.id}
+              projectId={s.workspace.project_id!}
+              mode={view}
+            />
+          )}
           {view === "bridge" && <BridgePanel />}
           {view === "hosts" && (
             <>

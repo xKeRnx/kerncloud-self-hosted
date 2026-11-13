@@ -1,5 +1,6 @@
 "use client";
 import { BudgetDecision } from "./budget-decision";
+import { StudioReviews } from "./content-research";
 import type { DecisionBudget } from "@/src/core/decision-answers";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "./api-client";
@@ -175,6 +176,7 @@ export function DecisionInbox({
         </div>
         <ShieldCheck size={28} />
       </div>
+      <StudioReviews workspaceId={workspaceId} />
       <div className="panel inbox-toolbar">
         <label className="field">
           <span>{t("Typ", "Type")}</span>

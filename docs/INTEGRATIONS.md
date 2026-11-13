@@ -1,6 +1,6 @@
 # Integrations
 
-KeRnCloud includes 32 service adapters in a searchable gallery under **Connections & environments → Integrations**. This is a list of implemented API contracts, not a claim that customer accounts have been connected or live-certified. Real access requires your provider account, permissions and credentials.
+KeRnCloud includes 35 service adapters in a searchable gallery under **Connections & environments → Integrations**. This is a list of implemented API contracts, not a claim that customer accounts have been connected or live-certified. Real access requires your provider account, permissions and credentials.
 
 ## Included adapters
 
@@ -39,6 +39,10 @@ KeRnCloud includes 32 service adapters in a searchable gallery under **Connectio
 | [Ayrshare Social Media](https://www.ayrshare.com/docs/introduction)                         | Provider token | Connect profiles in Ayrshare; inspect connected accounts and history. Publish approved text posts to supported text networks. A separate provider plan is required. |
 | [Apify Datasets](https://docs.apify.com/api/v2)                                             | Provider token | List existing datasets and read a bounded page of collected records. Does not start actors or paid scraping jobs.                                                   |
 
+| [Tavily](https://docs.tavily.com/documentation/api-reference/endpoint/search) | Provider token | Budgeted basic search in the project Research area |
+| [Brave Search](https://api-dashboard.search.brave.com/app/documentation/web-search/get-started) | Provider token | Budgeted web search in the project Research area |
+| [Exa](https://exa.ai/docs/reference/search) | Provider token | Budgeted lite search and bounded highlights in the project Research area |
+
 ## Set up a connection
 
 1. Search for a service and open **Set up**. The card lists its supported actions and links to the official provider documentation.
@@ -52,7 +56,7 @@ Token replacement keeps existing project and agent grants. Disconnect removes th
 
 ## Social media and external data
 
-Ayrshare connects social accounts through its own dashboard. This adapter reads connected-profile information and recent history, and can publish an individually approved **text** post to supported text networks (X/Twitter, Facebook, LinkedIn, Threads and Bluesky). Instagram/TikTok media upload, account-linking widgets, scheduling, social inboxes and analytics are not implemented by this adapter. It is not a complete social-media studio. Use a dedicated profile/API key for each intended account boundary.
+Ayrshare links social accounts in its dashboard. Content Studio now prepares text/media drafts, schedules dispatch and requires exact owner/admin approval and fixed project limits. Generic agent publishing is blocked. See [Content Studio and Research](CONTENT-RESEARCH.md). Acceptance is not proof of final publication. Social inboxes and performance analytics remain expansion work.
 
 Apify reads existing datasets, with a page limit of 20 items. It cannot start Actors, launches or paid extraction jobs. It does not expose the private user/account endpoint to an agent.
 

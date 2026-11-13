@@ -382,6 +382,9 @@ const hosts: Record<string, string[]> = {
   gitlab: ["gitlab.com"],
   ayrshare: ["api.ayrshare.com"],
   apify: ["api.apify.com"],
+  tavily: ["api.tavily.com"],
+  brave: ["api.search.brave.com"],
+  exa: ["api.exa.ai"],
 };
 export function integrationHeaders(
   provider: string,
@@ -412,6 +415,14 @@ export function integrationHeaders(
   if (provider === "figma") {
     delete headers.Authorization;
     headers["X-Figma-Token"] = token;
+  }
+  if (provider === "brave") {
+    delete headers.Authorization;
+    headers["X-Subscription-Token"] = token;
+  }
+  if (provider === "exa") {
+    delete headers.Authorization;
+    headers["x-api-key"] = token;
   }
   if (provider === "notion") headers["Notion-Version"] = "2025-09-03";
   if (provider === "github") headers["X-GitHub-Api-Version"] = "2026-03-10";

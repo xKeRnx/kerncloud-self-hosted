@@ -1,6 +1,7 @@
 export const workModes = ["draft", "execute", "team"] as const;
 export type WorkMode = (typeof workModes)[number];
 const draftTools = new Set([
+  "save_content_draft","read_research_job","save_research_report",
   "tool_catalog",
   "tool_search",
   "save_artifact",

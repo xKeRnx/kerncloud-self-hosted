@@ -13,6 +13,7 @@ import { modeAllowsTool, workModeInstruction } from "../core/work-modes.ts";
 import { bridgeTools } from "../core/bridge.ts";
 import { bridgeToolStep, bridgeToolsFor } from "./bridge.ts";
 import { appToolStep } from "./work-apps.ts";
+import { studioTools } from "../core/studio-research.ts";
 import {
   enforceProjectBudget,
   bindPlanTask,
@@ -91,6 +92,7 @@ export const builtinTools: {
   type: string;
   function: { name: string; description: string; parameters: any };
 }[] = [
+  ...studioTools,
   {
     type: "function",
     function: {
@@ -977,6 +979,10 @@ export async function modelStep(
       );
     if (run.model_policy?.autonomy_version !== 1) {
       const lazy = new Set([
+        "save_content_draft",
+        "read_research_job",
+        "research_query",
+        "save_research_report",
         "app_action",
         "project_status",
         "plan_work",
@@ -1677,6 +1683,21 @@ export async function toolStep(
   if (name === "list_bridges" || name === "bridge_action")
     return bridgeToolStep(taskId, lease, callId, name, args);
   if (name === "app_action") return appToolStep(taskId, lease, callId, args);
+  if (
+    [
+      "save_content_draft",
+      "read_research_job",
+      "research_query",
+      "save_research_report",
+    ].includes(name)
+  )
+    return (await import("./content-research.ts")).studioAgentStep(
+      taskId,
+      lease,
+      callId,
+      name,
+      args,
+    );
   if (name === "project_action")
     return projectToolStep(taskId, lease, callId, args);
   if (name === "validate_artifact")

@@ -57,6 +57,8 @@ See [the full integration catalog and setup guide](docs/INTEGRATIONS.md) for sup
 
 ## Self-hosting and the business model
 
+[Content Studio and Research](docs/CONTENT-RESEARCH.md) add project-scoped drafts, exact publishing reviews, scheduled dispatch, fixed external ceilings, bounded search, cached sources and versioned reports. AI assistance retains explicit task token/credit limits.
+
 Self-hosting requires no KeRnCloud subscription or license server for permitted use. You pay for your hardware and any external model provider you choose. KeRn-WS may charge separately for setup, support and managed hosting. Existing cloud billing remains separate; this repository does not promise a live checkout, hosting price or included model allowance.
 
 The local server grants new accounts a free self-hosted plan. It preserves resource limits, task budgets, permissions and sandbox controls. It does not convert existing SaaS accounts or balances. The default exposes only loopback ports. Docker access is reserved for separately configured trusted operator connectors.

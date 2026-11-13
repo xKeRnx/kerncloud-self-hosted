@@ -557,6 +557,16 @@ export async function appToolStep(
     ).rows[0];
     if (!row || (write && !row.write_enabled))
       throw new HttpError(403, "Work app not granted to this agent");
+    if (["tavily", "brave", "exa"].includes(row.provider))
+      throw new HttpError(
+        403,
+        "Use research_query with a project research job and fixed budget",
+      );
+    if (row.provider === "ayrshare" && write)
+      throw new HttpError(
+        403,
+        "Use save_content_draft and Content Studio review for scheduled, budgeted publication",
+      );
     appConnectionPlan(row, b);
     if (b.operation === "github_publish") {
       if (row.provider !== "github")
