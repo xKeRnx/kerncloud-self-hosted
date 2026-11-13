@@ -57,6 +57,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: immutable-container-manifest
+          include-hidden-files: true
           path: |
             distribution-images.json
             .release/container-lifecycle-proof.json
