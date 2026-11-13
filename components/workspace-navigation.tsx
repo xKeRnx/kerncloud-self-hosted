@@ -49,7 +49,7 @@ export function WorkspaceNavigation({
       items: [
         ["bridge", Server, t("Bridge & Geräte", "Bridge & devices")],
         ["models", Blocks, t("KI & Modelle", "AI & models")],
-        ["apps", Plug, t("Verbundene Dienste", "Connected services")],
+        ["apps", Plug, t("Integrationen", "Integrations")],
         ["mcp", Plug, t("Erweiterte Werkzeuge (MCP)", "Advanced tools (MCP)")],
         [
           "environmentOverview",

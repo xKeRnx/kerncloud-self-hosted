@@ -1331,6 +1331,7 @@ export function WorkspaceApp({
                   : ((
                       {
                         overview: t("Start", "Home"),
+                        apps: t("Integrationen", "Integrations"),
                         work: t("Alle Aufträge", "All tasks"),
                         settings: t("Einstellungen", "Settings"),
                         budgets: t(

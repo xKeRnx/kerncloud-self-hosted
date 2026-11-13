@@ -1,10 +1,12 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { appToolStep } from "../../src/server/work-apps.ts";
+import { NextRequest } from "next/server";
+import { handle } from "../../src/server/api.ts";
 
 export async function integrationGalleryTests(
   t: any,
-  { request, pool, owner, member, ws, agent, foreignWorkspace }: any,
+  { request, pool, owner, member, ws, agent, foreignWorkspace, admin }: any,
 ) {
   const project = (
     await pool.query(
@@ -262,6 +264,19 @@ export async function integrationGalleryTests(
         assert.equal(calls, 1);
         assert.match(result.result, /fixture-bot/);
         assert.ok(!result.result.includes("secret"));
+        globalThis.fetch = async () => {
+          calls++;
+          return new Response(JSON.stringify({ content: "x".repeat(27000) }));
+        };
+        const large = await appToolStep(tid, lease, "bounded-fixture", {
+          connection_id: connection,
+          operation: "service_read",
+          input: { action: "identity" },
+        });
+        const bounded = JSON.parse(large.result);
+        assert.equal(bounded.truncated, true);
+        assert.equal(bounded.untrusted_source, true);
+        assert.ok(large.result.length < 30000);
         await assert.rejects(() =>
           appToolStep(tid, lease, "write-without-consent", {
             connection_id: connection,
@@ -273,7 +288,7 @@ export async function integrationGalleryTests(
             },
           }),
         );
-        assert.equal(calls, 1);
+        assert.equal(calls, 2);
         await request(
           "suite/apps",
           { id: connection, action: "disconnect" },
@@ -286,13 +301,91 @@ export async function integrationGalleryTests(
             input: { action: "identity" },
           }),
         );
-        assert.equal(calls, 1);
+        assert.equal(calls, 2);
       } finally {
         globalThis.fetch = original;
         await pool.query("DELETE FROM runs WHERE id=$1", [rid]);
         await pool.query("DELETE FROM work_app_connections WHERE id=$1", [
           connection,
         ]);
+      }
+    },
+  );
+  await t.test(
+    "service-specific OAuth preserves selected service and projects across the session-bound callback",
+    async () => {
+      const configured = await request(
+        "admin/work-apps",
+        {
+          publicUrl: "http://localhost:3100",
+          providers: {
+            google: {
+              enabled: true,
+              clientId: "gallery-oauth-fixture",
+              secret: "gallery-oauth-fixture-secret",
+            },
+          },
+        },
+        admin.cookie,
+      );
+      assert.equal(configured.status, 200);
+      const started = await request(
+        "suite/apps/connect",
+        {
+          provider: "google",
+          service_id: "gmail",
+          name: "Gmail scope fixture",
+          project_ids: [project],
+        },
+        owner.cookie,
+      );
+      assert.equal(started.status, 200, JSON.stringify(started.data));
+      const target = new URL(started.data.url);
+      assert.equal(
+        target.searchParams.get("scope"),
+        "https://www.googleapis.com/auth/gmail.readonly",
+      );
+      const original = globalThis.fetch;
+      globalThis.fetch = async (url: any) => {
+        assert.equal(String(url), "https://oauth2.googleapis.com/token");
+        return new Response(
+          JSON.stringify({
+            access_token: "gmail-oauth-protocol-fixture",
+            refresh_token: "gmail-refresh-protocol-fixture",
+            expires_in: 3600,
+            scope: "https://www.googleapis.com/auth/gmail.readonly",
+          }),
+        );
+      };
+      try {
+        const response = await handle(
+          new NextRequest(
+            "http://localhost:3100/api/suite/apps/callback/google?state=" +
+              target.searchParams.get("state") +
+              "&code=fixture-code",
+            { headers: { cookie: owner.cookie } },
+          ),
+          "suite/apps/callback/google",
+        );
+        assert.equal(response.status, 303);
+        const row = (
+          await pool.query(
+            "SELECT * FROM work_app_connections WHERE workspace_id=$1 AND name='Gmail scope fixture'",
+            [ws],
+          )
+        ).rows[0];
+        assert.equal(row.service_id, "gmail");
+        assert.deepEqual(row.project_ids, [project]);
+        assert.deepEqual(row.agent_ids, []);
+        assert.ok(!row.credential.includes("gmail-oauth-protocol-fixture"));
+        await request(
+          "suite/apps",
+          { id: row.id, action: "disconnect" },
+          owner.cookie,
+        );
+      } finally {
+        globalThis.fetch = original;
+        await pool.query("DELETE FROM settings WHERE id='work_apps'");
       }
     },
   );

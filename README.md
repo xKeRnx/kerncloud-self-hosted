@@ -30,21 +30,21 @@ You do not need `npm install` on the host for this source quick start. Windows a
 
 ## What is included
 
-| Capability | Purpose |
-| --- | --- |
-| Projects and memory | Keep tasks, files and knowledge scoped, with explicit sharing |
-| Agent teams | Roles, delegation, organizational hierarchy and tool activity |
-| Decision inbox | Review actions, costs and targets; approve, reject or add information |
-| Deliverables | Files, previews and ZIP downloads |
-| Budget controls | Task limits, usage accounting and approved fallback models |
-| Skills and routines | Reusable reviewed workflows and scheduled work |
-| Bridge / connectors | Deliberately authorized device and environment access |
-| Models / MCP | Chat Completions, Responses and Anthropic Messages adapters, local models and approved tools |
-| Integrations | Searchable service gallery, OAuth or encrypted provider tokens, project/agent grants and read-only connection tests |
-| Work modes | Draft, single-agent execution or a team sharing one fixed budget |
-| Task workplace | See environment activity, pause and take control, then hand back |
-| Project pages | Versioned reports and dashboards with reviewed, expiring sharing links |
-| Starter teams | Reviewable Website studio, Research desk and Office assistant templates |
+| Capability          | Purpose                                                                                                             |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Projects and memory | Keep tasks, files and knowledge scoped, with explicit sharing                                                       |
+| Agent teams         | Roles, delegation, organizational hierarchy and tool activity                                                       |
+| Decision inbox      | Review actions, costs and targets; approve, reject or add information                                               |
+| Deliverables        | Files, previews and ZIP downloads                                                                                   |
+| Budget controls     | Task limits, usage accounting and approved fallback models                                                          |
+| Skills and routines | Reusable reviewed workflows and scheduled work                                                                      |
+| Bridge / connectors | Deliberately authorized device and environment access                                                               |
+| Models / MCP        | Chat Completions, Responses and Anthropic Messages adapters, local models and approved tools                        |
+| Integrations        | Searchable service gallery, OAuth or encrypted provider tokens, project/agent grants and read-only connection tests |
+| Work modes          | Draft, single-agent execution or a team sharing one fixed budget                                                    |
+| Task workplace      | See environment activity, pause and take control, then hand back                                                    |
+| Project pages       | Versioned reports and dashboards with reviewed, expiring sharing links                                              |
+| Starter teams       | Reviewable Website studio, Research desk and Office assistant templates                                             |
 
 <table><tr><td><img src="docs/assets/projects.svg" alt="Projects"><br>Project boundaries</td><td><img src="docs/assets/decisions.svg" alt="Decision inbox"><br>Central approvals</td></tr><tr><td><img src="docs/assets/agents.svg" alt="Agent team"><br>Agent activity</td><td><img src="docs/assets/timeline.svg" alt="Timeline"><br>Plans and execution</td></tr></table>
 
@@ -52,6 +52,8 @@ Screenshots show the real application with neutral demonstration data. They are 
 
 See [workflows and safety boundaries](docs/WORKFLOWS.md) for the new modes, engines, workplace, pages and team templates.
 See [the full integration catalog and setup guide](docs/INTEGRATIONS.md) for supported services, exact capabilities, social media, data providers and further integration ideas.
+
+![Integration gallery with service-specific setup and permissions](docs/assets/integrations.png)
 
 ## Self-hosting and the business model
 

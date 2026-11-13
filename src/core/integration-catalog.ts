@@ -654,6 +654,40 @@ export const integrationById = (id: string | null | undefined) =>
 export function integrationManifest(serviceId: string | null | undefined) {
   const i = integrationById(serviceId);
   return i
-    ? { service: i.id, operations: i.operations ?? [], actions: i.actions }
+    ? {
+        service: i.id,
+        operations: i.operations ?? [],
+        actions: i.actions,
+        operation_fields: Object.fromEntries(
+          (i.operations ?? []).map((operation) => [
+            operation,
+            (
+              {
+                mail_list: [],
+                mail_read: ["id"],
+                mail_send: ["to", "subject", "text"],
+                calendar_list: [],
+                calendar_create: [
+                  "title",
+                  "start (ISO datetime)",
+                  "end (ISO datetime)",
+                  "description (optional)",
+                ],
+                files_list: [],
+                file_read: ["id"],
+                repos_list: [],
+                github_publish: [
+                  "repository (owner/repo)",
+                  "base",
+                  "branch",
+                  "title",
+                  "body",
+                  "files [{path,content}] (max 20KB)",
+                ],
+              } as Record<string, string[]>
+            )[operation] ?? [],
+          ]),
+        ),
+      }
     : undefined;
 }

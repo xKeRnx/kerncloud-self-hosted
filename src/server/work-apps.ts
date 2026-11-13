@@ -589,10 +589,17 @@ export async function appToolStep(
         row.provider,
       );
     }
+    const serialized = JSON.stringify(result);
     const output = {
-      result: JSON.stringify({ data: result, untrusted_source: true }).slice(
-        0,
-        30000,
+      result: JSON.stringify(
+        serialized.length > 24000
+          ? {
+              data_preview: serialized.slice(0, 24000),
+              untrusted_source: true,
+              truncated: true,
+              note: "Result preview only. Use a narrower resource or bounded range; repeating the same request does not reveal the missing content.",
+            }
+          : { data: result, untrusted_source: true, truncated: false },
       ),
       yield: false,
     };

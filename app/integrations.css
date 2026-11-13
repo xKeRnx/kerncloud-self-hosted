@@ -135,8 +135,8 @@
   color: var(--ui-accent);
 }
 .integration-card-heading > div {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 140px;
+  min-width: 100px;
 }
 .integration-hub .integration-card-heading h2 {
   margin: 4px 0 0;

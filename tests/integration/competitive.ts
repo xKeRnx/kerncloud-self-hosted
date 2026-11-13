@@ -506,6 +506,7 @@ export async function competitiveTests(t: any, { request, pool, admin }: any) {
     ws,
     agent,
     foreignWorkspace: b.workspace.id,
+    admin,
   });
   await t.test(
     "Revoking membership immediately removes shared workspace access",
