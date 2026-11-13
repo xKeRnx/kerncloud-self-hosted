@@ -2,6 +2,10 @@
 
 Open **Projects → a project → Content Studio / Research**. Both areas retain the selected project's boundaries and use the existing integrations, tasks and permissions.
 
+![Exact publication review in the central Inbox](assets/content-studio-review.png)
+
+The screenshots use isolated UI fixtures, without live social accounts or paid searches.
+
 ## Fixed limits first
 
 Expand **Fixed external project limits**. New budgets start at zero. Set a lifetime USD ceiling and total provider-request limit. Each research notebook also has its own fixed USD/request limits (at most 20 requests).
@@ -23,6 +27,8 @@ These records describe **committed ceilings, not actual provider invoices**. KeR
 Agents use `save_content_draft` with `request_review=true`, then finish without waiting for publication. They cannot approve. Generic Ayrshare writes through `app_action` are blocked in favor of Studio review and budgets.
 
 ## Research
+
+![Collected sources with retrieval dates and bounded search](assets/research-sources.png)
 
 Connect Tavily, Brave Search or Exa and grant the project/agents access. Create a notebook with fixed limits. Search returns at most five results: Tavily basic with automatic parameters, AI answers and raw content disabled; Exa lite with bounded highlights; Brave bounded web search. Crawling, extraction add-ons and paid scraper launches are not enabled.
 
