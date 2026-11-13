@@ -15,6 +15,7 @@ const dockerSetup = require("./docker-setup.cjs");
 const {
   allowedCommands,
   allowedNavigation,
+  allowedWorkspacePopup,
   redact,
   loginAutostart,
 } = require("./policy.cjs");
@@ -279,9 +280,96 @@ else {
             },
           });
           // Dashboard receives neither preload nor privileged IPC; all actions still use server auth.
-          workspace.webContents.setWindowOpenHandler(() => ({
-            action: "deny",
-          }));
+          const dashboard = workspace,
+            serverOrigin = origin(),
+            children = new Set();
+          let gateway =
+            connection.mode === "local" ? config.PUBLIC_ENVIRONMENT_URL : null;
+          const configuredGateway = async () => {
+            if (gateway) return gateway;
+            const response = await dashboard.webContents.session.fetch(
+              serverOrigin + "/api/client/config",
+              {
+                credentials: "include",
+                redirect: "error",
+                signal: AbortSignal.timeout(4000),
+              },
+            );
+            if (!response.ok) return null;
+            const reader = response.body?.getReader();
+            if (!reader) return null;
+            const chunks = [];
+            let bytes = 0;
+            try {
+              while (true) {
+                const part = await reader.read();
+                if (part.done) break;
+                bytes += part.value.length;
+                if (bytes > 4096) return null;
+                chunks.push(Buffer.from(part.value));
+              }
+            } finally {
+              await reader.cancel().catch(() => {});
+            }
+            const url = new URL(
+              JSON.parse(Buffer.concat(chunks).toString()).environmentBase,
+            );
+            if (
+              url.username ||
+              url.password ||
+              url.pathname !== "/" ||
+              url.search ||
+              url.hash ||
+              !(
+                url.protocol === "https:" ||
+                (url.protocol === "http:" && url.hostname === "localhost")
+              )
+            )
+              return null;
+            gateway = url.origin;
+            return gateway;
+          };
+          dashboard.webContents.setWindowOpenHandler(({ url }) =>
+            allowedWorkspacePopup(url, serverOrigin, gateway)
+              ? {
+                  action: "allow",
+                  overrideBrowserWindowOptions: {
+                    autoHideMenuBar: true,
+                    webPreferences: {
+                      sandbox: true,
+                      nodeIntegration: false,
+                      contextIsolation: true,
+                    },
+                  },
+                }
+              : { action: "deny" },
+          );
+          dashboard.webContents.on("did-create-window", (child) => {
+            children.add(child);
+            child.on("closed", () => children.delete(child));
+            child.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+            child.webContents.on("will-navigate", (event, url) => {
+              if (allowedWorkspacePopup(url, serverOrigin, gateway)) return;
+              event.preventDefault();
+              void configuredGateway()
+                .then((base) => {
+                  if (
+                    !child.isDestroyed() &&
+                    allowedWorkspacePopup(url, serverOrigin, base)
+                  )
+                    return child.loadURL(url);
+                })
+                .catch(() => {});
+            });
+            child.webContents.on("will-redirect", (event, url) => {
+              if (!allowedWorkspacePopup(url, serverOrigin, gateway))
+                event.preventDefault();
+            });
+          });
+          dashboard.on("closed", () => {
+            for (const child of children)
+              if (!child.isDestroyed()) child.close();
+          });
           workspace.webContents.on("will-navigate", (e, url) => {
             if (!allowedNavigation(url, origin())) e.preventDefault();
           });

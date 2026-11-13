@@ -24,6 +24,16 @@ export async function workspaceEvolutionTests(
     ws = state.workspace.id,
     project = state.project.id,
     agent = state.agents.find((a: any) => a.can_manage) ?? state.agents[0];
+  await t.test(
+    "Desktop gateway configuration requires authentication and exposes only the configured origin",
+    async () => {
+      assert.equal((await request("client/config")).status, 401);
+      const config = await request("client/config", undefined, cookie);
+      assert.equal(config.status, 200);
+      assert.deepEqual(Object.keys(config.data), ["environmentBase"]);
+      assert.equal(config.data.environmentBase, "http://localhost:3200");
+    },
+  );
   const other = randomUUID();
   await pool.query(
     "INSERT INTO workspace_projects(id,workspace_id,name,status,all_agents) VALUES($1,$2,'Other evolution project','active',true)",

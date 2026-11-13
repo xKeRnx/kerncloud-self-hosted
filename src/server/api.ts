@@ -94,7 +94,7 @@ import {
   customerEnvironment,
   adminRuntime,
 } from "./runtime.ts";
-import { launchEnvironment } from "./environment-access.ts";
+import { launchEnvironment, environmentBase } from "./environment-access.ts";
 import { runtimeCheckout } from "./runtime-payments.ts";
 import { controlExecution } from "./execution-control.ts";
 import { NextRequest, NextResponse } from "next/server";
@@ -1137,6 +1137,11 @@ export async function handle(req: NextRequest, path: string) {
           path.split("/")[1],
           method === "POST" ? body : undefined,
         ),
+        { headers: { "Cache-Control": "private, no-store" } },
+      );
+    if (path === "client/config" && method === "GET")
+      return NextResponse.json(
+        { environmentBase: environmentBase().origin },
         { headers: { "Cache-Control": "private, no-store" } },
       );
     if (path === "suite/starter-teams" && method === "GET")

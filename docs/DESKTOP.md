@@ -14,6 +14,8 @@ The initial release-image download needs internet. Open the generated private co
 
 Under Connection choose **Connect to an existing server**, enter its HTTPS origin and save. The launcher remembers this device preference and skips local server initialization and Docker checks. Sign in using that server’s normal account. HTTP is accepted only for loopback testing. The dashboard has no privileged Electron preload or Node access. Switching modes preserves local services, files and grants; it does not stop a server that others may still use.
 
+Workplace previews open isolated windows restricted to the selected server and UUID subdomains of its configured environment gateway. Other websites, custom URL schemes and local file navigation are blocked; these windows have no Node access or privileged preload.
+
 ## Network and users
 
 Network & ports offers localhost-only access or explicit LAN access through this computer's IP/hostname. Stop and start the services after saving a change. No firewall/router settings are changed. Use HTTPS for sensitive network access and for invitation/password links outside loopback.
