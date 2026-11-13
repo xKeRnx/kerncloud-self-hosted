@@ -19,6 +19,7 @@ import "./security-infrastructure.css";
 import "./workspace-rebuild.css";
 import "./bridge.css";
 import "./workspace-horizon.css";
+import "./integrations.css";
 import SiteFooter from "@/components/site-footer";
 import { LanguageProvider } from "@/components/language";
 import { languagesConfig } from "@/src/server/content";

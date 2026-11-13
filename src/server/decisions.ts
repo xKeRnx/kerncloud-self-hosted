@@ -73,11 +73,12 @@ async function target(
       throw new HttpError(400, "Read actions do not need approval");
     const row = (
       await c.query(
-        "SELECT * FROM work_app_connections WHERE id=$1 AND workspace_id=$2 AND enabled AND write_enabled AND agent_ids ? $3",
-        [b.connection_id, task.workspace_id, task.agent_id],
+        "SELECT * FROM work_app_connections WHERE id=$1 AND workspace_id=$2 AND enabled AND write_enabled AND agent_ids ? $3 AND (project_ids IS NULL OR project_ids ? (SELECT project_id FROM runs WHERE id=$4))",
+        [b.connection_id, task.workspace_id, task.agent_id, task.run_id],
       )
     ).rows[0];
     if (!row) throw new HttpError(403, "Work app write permission unavailable");
+    (await import("./work-apps.ts")).appConnectionPlan(row, b);
     return {
       key: "app:" + row.id + ":" + b.operation,
       scope: digest([row.id, row.provider, row.revision]),

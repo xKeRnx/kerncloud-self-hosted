@@ -40,6 +40,7 @@ You do not need `npm install` on the host for this source quick start. Windows a
 | Skills and routines | Reusable reviewed workflows and scheduled work |
 | Bridge / connectors | Deliberately authorized device and environment access |
 | Models / MCP | Chat Completions, Responses and Anthropic Messages adapters, local models and approved tools |
+| Integrations | Searchable service gallery, OAuth or encrypted provider tokens, project/agent grants and read-only connection tests |
 | Work modes | Draft, single-agent execution or a team sharing one fixed budget |
 | Task workplace | See environment activity, pause and take control, then hand back |
 | Project pages | Versioned reports and dashboards with reviewed, expiring sharing links |
@@ -50,6 +51,7 @@ You do not need `npm install` on the host for this source quick start. Windows a
 Screenshots show the real application with neutral demonstration data. They are not customer testimonials or performance guarantees. Plans, actions and results are observable; private internal model reasoning is not an execution log.
 
 See [workflows and safety boundaries](docs/WORKFLOWS.md) for the new modes, engines, workplace, pages and team templates.
+See [the full integration catalog and setup guide](docs/INTEGRATIONS.md) for supported services, exact capabilities, social media, data providers and further integration ideas.
 
 ## Self-hosting and the business model
 

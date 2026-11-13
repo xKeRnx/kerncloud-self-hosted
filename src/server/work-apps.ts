@@ -17,6 +17,11 @@ import {
 import { lockTask } from "./store.ts";
 import { decisionConsent } from "./decisions.ts";
 import { executionSignal } from "./execution-control.ts";
+import { integrations, integrationById } from "../core/integration-catalog.ts";
+import {
+  integrationPlan,
+  integrationHeaders,
+} from "../core/integration-plans.ts";
 type Config = {
   publicUrl: string;
   providers: Partial<
@@ -112,15 +117,49 @@ export async function workApps(
         action: z.enum(["configure", "disconnect"]),
         agent_ids: z.array(z.string().uuid()).max(100).default([]),
         write_enabled: z.boolean().default(false),
+        project_ids: z.array(z.string().uuid()).max(100).nullable().optional(),
       })
       .parse(body);
     await transaction(async (c) => {
+      const existing = (
+        await c.query(
+          "SELECT * FROM work_app_connections WHERE id=$1 AND workspace_id=$2 FOR UPDATE",
+          [b.id, workspace],
+        )
+      ).rows[0];
+      if (!existing)
+        throw new HttpError(404, "Integration connection not found");
+      const service = integrationById(existing.service_id);
+      if (b.action === "configure" && b.write_enabled && service) {
+        const supportsWrites =
+          service.actions.some((a) => a.write) ||
+          service.operations?.some((o) => appWrites(o));
+        if (!supportsWrites)
+          throw new HttpError(400, "This integration is read-only");
+        const required = service.scopes?.write ?? [];
+        if (
+          service.auth === "oauth" &&
+          required.some((scope) => !existing.scopes.includes(scope))
+        )
+          throw new HttpError(
+            409,
+            "Reconnect this service with its write scopes before enabling writes",
+          );
+      }
       const ids = await c.query(
         "SELECT id FROM agents WHERE workspace_id=$1 AND id=ANY($2::text[])",
         [workspace, b.agent_ids],
       );
       if (ids.rowCount !== new Set(b.agent_ids).size)
         throw new HttpError(400, "Foreign agent");
+      if (b.project_ids) {
+        const projects = await c.query(
+          "SELECT id FROM workspace_projects WHERE workspace_id=$1 AND id=ANY($2::text[])",
+          [workspace, b.project_ids],
+        );
+        if (projects.rowCount !== new Set(b.project_ids).size)
+          throw new HttpError(400, "Foreign project");
+      }
       if (b.action === "disconnect")
         await c.query(
           "DELETE FROM work_app_connections WHERE id=$1 AND workspace_id=$2",
@@ -128,8 +167,17 @@ export async function workApps(
         );
       else
         await c.query(
-          "UPDATE work_app_connections SET agent_ids=$3,write_enabled=$4,revision=revision+1,updated_at=now() WHERE id=$1 AND workspace_id=$2",
-          [b.id, workspace, JSON.stringify(b.agent_ids), b.write_enabled],
+          "UPDATE work_app_connections SET agent_ids=$3,write_enabled=$4,project_ids=CASE WHEN $5::boolean THEN $6::jsonb ELSE project_ids END,revision=revision+1,updated_at=now() WHERE id=$1 AND workspace_id=$2",
+          [
+            b.id,
+            workspace,
+            JSON.stringify(b.agent_ids),
+            b.write_enabled,
+            b.project_ids !== undefined,
+            b.project_ids === undefined || b.project_ids === null
+              ? null
+              : JSON.stringify(b.project_ids),
+          ],
         );
       await audit(c, actor, "work_app." + b.action, b.id);
     });
@@ -137,6 +185,13 @@ export async function workApps(
   const config = await workAppConfig();
   return {
     role,
+    catalog: integrations,
+    projects: (
+      await pool.query(
+        "SELECT id,name FROM workspace_projects WHERE workspace_id=$1 AND status='active' ORDER BY name",
+        [workspace],
+      )
+    ).rows,
     providers: appProviders.map((id) => ({
       id,
       configured: !!(
@@ -145,7 +200,7 @@ export async function workApps(
     })),
     connections: (
       await pool.query(
-        "SELECT id,provider,name,scopes,agent_ids,write_enabled,enabled,revision,updated_at FROM work_app_connections WHERE workspace_id=$1",
+        "SELECT id,provider,service_id,name,scopes,agent_ids,project_ids,write_enabled,enabled,revision,checked_at,health,health_message,updated_at FROM work_app_connections WHERE workspace_id=$1 ORDER BY created_at",
         [workspace],
       )
     ).rows,
@@ -169,6 +224,8 @@ export async function startWorkApp(
         provider: z.enum(appProviders),
         name: z.string().trim().min(1).max(100),
         write: z.boolean().default(false),
+        service_id: z.string().max(60).optional(),
+        project_ids: z.array(z.string().uuid()).max(100).default([]),
       })
       .strict()
       .parse(body),
@@ -179,15 +236,27 @@ export async function startWorkApp(
       409,
       "Work-app OAuth client not configured in administration",
     );
+  const service = integrationById(b.service_id);
+  if (
+    b.service_id &&
+    (!service || service.auth !== "oauth" || service.provider !== b.provider)
+  )
+    throw new HttpError(400, "Service/provider mismatch");
+  const projects = await pool.query(
+    "SELECT id FROM workspace_projects WHERE workspace_id=$1 AND id=ANY($2::text[])",
+    [workspace, b.project_ids],
+  );
+  if (projects.rowCount !== new Set(b.project_ids).size)
+    throw new HttpError(400, "Foreign project");
   const state = randomBytes(32).toString("base64url"),
     verifier = randomBytes(32).toString("base64url"),
     scopes = [
-      ...appScopes[b.provider].read,
-      ...(b.write ? appScopes[b.provider].write : []),
+      ...(service?.scopes ?? appScopes[b.provider]).read,
+      ...(b.write ? (service?.scopes ?? appScopes[b.provider]).write : []),
     ];
   await pool.query("DELETE FROM work_app_states WHERE expires_at<now()");
   await pool.query(
-    "INSERT INTO work_app_states(id,user_id,workspace_id,provider,verifier,scopes,name,session_hash,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,now()+interval '10 minutes')",
+    "INSERT INTO work_app_states(id,user_id,workspace_id,provider,verifier,scopes,name,session_hash,expires_at,service_id,project_ids) VALUES($1,$2,$3,$4,$5,$6,$7,$8,now()+interval '10 minutes',$9,$10)",
     [
       hashToken(state),
       actor,
@@ -197,6 +266,8 @@ export async function startWorkApp(
       scopes,
       b.name,
       hashToken(req.cookies.get("kc_session")?.value ?? ""),
+      service?.id ?? null,
+      service ? JSON.stringify(b.project_ids) : null,
     ],
   );
   const url = new URL(
@@ -318,7 +389,7 @@ export async function callbackWorkApp(req: NextRequest, provider: AppProvider) {
     if (!["owner", "admin"].includes(access))
       throw new HttpError(403, "Workspace right revoked during OAuth");
     await c.query(
-      "INSERT INTO work_app_connections(id,workspace_id,provider,name,credential,scopes) VALUES($1,$2,$3,$4,$5,$6)",
+      "INSERT INTO work_app_connections(id,workspace_id,provider,name,credential,scopes,service_id,project_ids) VALUES($1,$2,$3,$4,$5,$6,$7,$8)",
       [
         randomUUID(),
         row.workspace_id,
@@ -333,6 +404,8 @@ export async function callbackWorkApp(req: NextRequest, provider: AppProvider) {
           }),
         ),
         scopes,
+        row.service_id,
+        row.project_ids === null ? null : JSON.stringify(row.project_ids),
       ],
     );
   });
@@ -378,28 +451,25 @@ export async function appFetch(
   method = "GET",
   body?: unknown,
   signal?: AbortSignal,
+  provider?: string,
 ) {
-  const host = new URL(url);
-  if (
-    host.protocol !== "https:" ||
-    ![
-      "gmail.googleapis.com",
-      "www.googleapis.com",
-      "graph.microsoft.com",
-      "api.github.com",
-    ].includes(host.hostname)
-  )
-    throw new HttpError(400, "Unapproved app endpoint");
+  const host = new URL(url).hostname;
+  const selected =
+    provider ??
+    (host === "api.github.com"
+      ? "github"
+      : host === "graph.microsoft.com"
+        ? "microsoft"
+        : "google");
+  const headers = integrationHeaders(selected, token, url);
   const res = await fetch(url, {
     method,
     redirect: "error",
-    headers: {
-      Authorization: "Bearer " + token,
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
+    headers,
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    signal: signal ?? AbortSignal.timeout(25000),
+    signal: signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(25000)])
+      : AbortSignal.timeout(25000),
   });
   const reader = res.body?.getReader();
   let length = 0,
@@ -423,7 +493,42 @@ export async function appFetch(
       409,
       `Work app returned HTTP ${res.status}; check connection and permissions`,
     );
-  return text ? JSON.parse(text) : { accepted: true };
+  const result = text ? JSON.parse(text) : { accepted: true };
+  if (
+    result?.ok === false ||
+    result?.status === "error" ||
+    result?.success === false ||
+    (Array.isArray(result?.errors) && result.errors.length)
+  )
+    throw new HttpError(
+      409,
+      "Provider rejected the request; check token scopes, shared resources and rate limits",
+    );
+  // The social profile endpoint can include billing/profile metadata. Only expose useful public account fields.
+  if (selected === "ayrshare" && new URL(url).pathname === "/api/user")
+    return {
+      activeSocialAccounts: result.activeSocialAccounts,
+      displayNames: result.displayNames,
+      title: result.title,
+    };
+  return result;
+}
+export function appConnectionPlan(
+  row: { provider: string; service_id?: string | null },
+  b: { operation: string; input: unknown },
+) {
+  const service = integrationById(row.service_id);
+  if (row.service_id && (!service || service.provider !== row.provider))
+    throw new HttpError(400, "Invalid integration configuration");
+  if (service) {
+    if (b.operation === "service_read" || b.operation === "service_write")
+      return integrationPlan(service.id, b.operation, b.input);
+    if (!service.operations?.includes(b.operation))
+      throw new HttpError(403, "Operation outside this service grant");
+  } else if (!appProviders.includes(row.provider as AppProvider))
+    throw new HttpError(403, "Service grant missing");
+  if (b.operation === "github_publish") return null;
+  return appPlan(row.provider as AppProvider, b.operation as any, b.input);
 }
 export async function appToolStep(
   taskId: string,
@@ -435,21 +540,22 @@ export async function appToolStep(
     op = taskId + ":" + callId,
     write = appWrites(b.operation);
   const scoped = await transaction(async (c) => {
-    const { task } = await lockTask(c, taskId, lease);
+    const { task, run } = await lockTask(c, taskId, lease);
     const row = (
       await c.query(
-        "SELECT * FROM work_app_connections WHERE id=$1 AND workspace_id=$2 AND enabled AND agent_ids ? $3",
-        [b.connection_id, task.workspace_id, task.agent_id],
+        "SELECT * FROM work_app_connections WHERE id=$1 AND workspace_id=$2 AND enabled AND agent_ids ? $3 AND (project_ids IS NULL OR project_ids ? $4)",
+        [b.connection_id, task.workspace_id, task.agent_id, run.project_id],
       )
     ).rows[0];
     if (!row || (write && !row.write_enabled))
       throw new HttpError(403, "Work app not granted to this agent");
+    appConnectionPlan(row, b);
     if (b.operation === "github_publish") {
       if (row.provider !== "github")
         throw new HttpError(400, "GitHub connection required");
       const { publishInput } = await import("../core/projects.ts");
       publishInput.parse(b.input);
-    } else appPlan(row.provider, b.operation, b.input);
+    }
     if (write) await decisionConsent(c, task, "app_action", b, op, {});
     await c.query("INSERT INTO operations(id,task_id) VALUES($1,$2)", [
       op,
@@ -473,13 +579,14 @@ export async function appToolStep(
     } else if (b.operation === "file_read") {
       result = await readAppFile(row.provider, token, b.input, control.signal);
     } else {
-      const plan = appPlan(row.provider, b.operation, b.input);
+      const plan = appConnectionPlan(row, b)!;
       result = await appFetch(
         token,
         plan.url,
         plan.method,
         plan.body,
         control.signal,
+        row.provider,
       );
     }
     const output = {

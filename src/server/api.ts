@@ -46,6 +46,10 @@ import {
   adminWorkApps,
 } from "./work-apps.ts";
 import { projects } from "./projects.ts";
+import {
+  saveTokenIntegration,
+  checkIntegration,
+} from "./integration-connections.ts";
 import { quality, tickQuality } from "./quality.ts";
 import {
   environmentBudgets,
@@ -696,7 +700,7 @@ export async function handle(req: NextRequest, path: string) {
       return NextResponse.json({
         status: "ok",
         service: "kerncloud",
-        version: "0.40.1",
+        version: "0.41.0",
         edition: selfHostedEdition ? "self-hosted" : "operator",
       });
     if (path === "billing/webhook" && req.method === "POST")
@@ -1223,6 +1227,14 @@ export async function handle(req: NextRequest, path: string) {
         await adminWorkApps(user.id, method === "GET" ? undefined : body),
       );
     }
+    if (path === "suite/apps/token" && method === "POST")
+      return NextResponse.json(
+        await saveTokenIntegration(user.id, workspace.id, body),
+      );
+    if (path === "suite/apps/check" && method === "POST")
+      return NextResponse.json(
+        await checkIntegration(user.id, workspace.id, body),
+      );
     if (path === "suite/apps")
       return NextResponse.json(
         await workApps(

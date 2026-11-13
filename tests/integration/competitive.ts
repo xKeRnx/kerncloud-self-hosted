@@ -10,6 +10,7 @@ import { artifactResponse, runArchive } from "../../src/server/artifacts.ts";
 import { unzipSync, strFromU8 } from "fflate";
 import { tickQuality } from "../../src/server/quality.ts";
 import { decisionConsent, createDecision } from "../../src/server/decisions.ts";
+import { integrationGalleryTests } from "./integration-gallery.ts";
 export async function competitiveTests(t: any, { request, pool, admin }: any) {
   const owner = await request("auth/signup", {
     name: "Suite Owner",
@@ -497,6 +498,15 @@ export async function competitiveTests(t: any, { request, pool, admin }: any) {
       }
     },
   );
+  await integrationGalleryTests(t, {
+    request,
+    pool,
+    owner,
+    member,
+    ws,
+    agent,
+    foreignWorkspace: b.workspace.id,
+  });
   await t.test(
     "Revoking membership immediately removes shared workspace access",
     async () => {

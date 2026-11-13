@@ -32,13 +32,20 @@ export const appActionInput = z
       "file_read",
       "repos_list",
       "github_publish",
+      "service_read",
+      "service_write",
     ]),
     input: z.record(z.unknown()).default({}),
   })
   .strict();
 export type AppAction = z.infer<typeof appActionInput>;
 export function appWrites(operation: string) {
-  return ["mail_send", "calendar_create", "github_publish"].includes(operation);
+  return [
+    "mail_send",
+    "calendar_create",
+    "github_publish",
+    "service_write",
+  ].includes(operation);
 }
 const id = z
     .string()
