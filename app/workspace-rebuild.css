@@ -803,3 +803,8 @@
 .task-workplace > p {
   margin-bottom: 24px;
 }
+
+.panel.task-workplace,
+.panel.project-pages {
+  padding: 24px;
+}

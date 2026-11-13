@@ -28,7 +28,7 @@ export function ProjectResults({ state }: { state: any }) {
           </p>
         </div>
       </header>
-      <ProjectPages state={state} />
+      <ProjectPages state={state} artifacts={data?.items ?? []} />
       {error && (
         <p role="alert" className="error-box">
           {error}

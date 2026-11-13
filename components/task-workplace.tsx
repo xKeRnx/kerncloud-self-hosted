@@ -99,23 +99,34 @@ export function TaskWorkplace({
             <div className="button-row">
               {!e.human_controlled ? (
                 <button
-                  disabled={busy || e.status !== "running"}
+                  className="secondary"
+                  disabled={
+                    busy ||
+                    e.status !== "running" ||
+                    ["completed", "failed", "canceled"].includes(run.status)
+                  }
                   onClick={() => void control(e, "takeover")}
                 >
                   {t("Pausieren & übernehmen", "Pause & take control")}
                 </button>
               ) : (
                 <>
-                  <button disabled={busy} onClick={() => void open(e)}>
+                  <button
+                    className="secondary"
+                    disabled={busy}
+                    onClick={() => void open(e)}
+                  >
                     {t("Browser / Editor öffnen", "Open browser / editor")}
                   </button>
                   <button
+                    className="secondary"
                     disabled={busy}
                     onClick={() => void control(e, "release-resume")}
                   >
                     {t("Zurückgeben & fortsetzen", "Hand back & resume")}
                   </button>
                   <button
+                    className="secondary"
                     disabled={busy}
                     onClick={() => void control(e, "release")}
                   >

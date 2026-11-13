@@ -47,7 +47,16 @@ jobs:
           APP_DIGEST: ${{ steps.app.outputs.digest }}
           VALIDATOR_DIGEST: ${{ steps.validator.outputs.digest }}
         run: node -e "require('fs').writeFileSync('distribution-images.json',JSON.stringify({schema:1,version:process.env.VERSION,images:{app:'ghcr.io/xkernx/kerncloud-self-hosted@'+process.env.APP_DIGEST,validator:'ghcr.io/xkernx/kerncloud-validator@'+process.env.VALIDATOR_DIGEST}},null,2))"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify anonymous installation, update and retained data
+        run: |
+          docker logout ghcr.io
+          node scripts/test-image-lifecycle.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: immutable-container-manifest
-          path: distribution-images.json
+          path: |
+            distribution-images.json
+            .release/container-lifecycle-proof.json

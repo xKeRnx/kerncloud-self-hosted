@@ -2,7 +2,13 @@
 import { useState, useEffect } from "react";
 import { api } from "./api-client";
 import { useLanguage } from "./language";
-export function ProjectPages({ state }: { state: any }) {
+export function ProjectPages({
+  state,
+  artifacts = [],
+}: {
+  state: any;
+  artifacts?: any[];
+}) {
   const { t, date } = useLanguage();
   const [pages, setPages] = useState<any[]>([]),
     [error, setError] = useState(""),
@@ -25,9 +31,7 @@ export function ProjectPages({ state }: { state: any }) {
       live = false;
     };
   }, [url]);
-  const files = state.artifacts.filter(
-    (f: any) => !f.retired && !f.binary_bytes,
-  );
+  const files = artifacts.filter((f: any) => !f.retired && !f.binary_bytes);
   async function write(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
@@ -110,6 +114,7 @@ export function ProjectPages({ state }: { state: any }) {
               {t("Öffnen / PDF drucken", "Open / print PDF")}
             </a>
             <button
+              className="secondary"
               disabled={busy}
               onClick={() =>
                 void api<any>(
@@ -123,14 +128,18 @@ export function ProjectPages({ state }: { state: any }) {
             >
               {t("Versionen", "Versions")}
             </button>
-            <button disabled={busy} onClick={() => void sharing(p)}>
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={() => void sharing(p)}
+            >
               {p.shared
                 ? t("Link widerrufen", "Revoke link")
                 : t("Freigabelink erstellen", "Create sharing link")}
             </button>
           </div>
           {history[p.id] && (
-            <div className="button-row">
+            <div className="button-row project-page-history">
               {history[p.id].map((v) => (
                 <a
                   key={v.revision}
@@ -197,7 +206,7 @@ export function ProjectPages({ state }: { state: any }) {
               "This reviewed update may also appear on an existing public link.",
             )}
           </label>
-          <button disabled={busy || !files.length}>
+          <button className="primary" disabled={busy || !files.length}>
             {t("Version speichern", "Save version")}
           </button>
         </form>

@@ -43,6 +43,14 @@ export async function taskWorkplace(
       ).rowCount
     )
       throw new HttpError(404, "Environment is outside this project");
+    if (
+      b.action === "takeover" &&
+      ["completed", "failed", "canceled"].includes(run.status)
+    )
+      throw new HttpError(
+        409,
+        "This task is closed. Open an active task to take control of its environment.",
+      );
     if (b.action === "takeover") await changeRun(workspace, runId, "pause");
     await transaction(async (c) => {
       const e = (
