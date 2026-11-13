@@ -86,6 +86,14 @@ These are extension candidates, **not shipped adapters**. Provider API support, 
 | Automation                | n8n, Make, Zapier, Pipedream, reviewed incoming/outgoing webhooks                                                                 |
 | Home and devices          | Home Assistant, MQTT, Node-RED, approved Bridge device actions                                                                    |
 
-## Verification
+## Optional connector and data platforms
+
+[Pipedream Connect](https://pipedream.com/docs/connect) and [Composio](https://docs.composio.dev/docs) are candidates for optional managed authentication and large connector catalogs. They are not installed or enabled by this release. Such a mode would require an explicit choice about external credential handling, data routing, tool permissions and provider costs; native self-hosted adapters remain useful independently.
+
+[RapidAPI](https://docs.rapidapi.com/docs/consumer-quick-start-guide) is a marketplace for data APIs rather than one universal data source. Each API needs its own reviewed request contract, quota and spending controls. Other research candidates include [Firecrawl](https://docs.firecrawl.dev/introduction), [Tavily](https://docs.tavily.com/) and [DataForSEO](https://docs.dataforseo.com/v3/).
+
+Useful product workflows include a social-content studio (planning, drafts, media, review, publishing, performance), a unified comments inbox, brand and competitor monitoring, recurring sourced research reports and reviewed lead enrichment. These are product ideas beyond the bounded actions listed above, not claims of implemented end-to-end workflows.
+
+## Verification details
 
 Unit tests exercise every adapter action's request contract, provider-specific authentication, fixed-origin checks, bounded spreadsheet reads and read/write separation. Database integration fixtures cover encrypted storage, workspace/project/agent isolation, credential rotation, health checks, throttling, revocation and approval requirements. These tests use protocol fixtures; live provider account verification happens only after the account owner connects and tests a service.
