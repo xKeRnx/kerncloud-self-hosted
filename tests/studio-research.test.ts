@@ -145,3 +145,21 @@ test("agent research discovery is a compact index, with excerpts loaded one quer
     "studio",
   );
 });
+import { apiErrorMessage } from "../src/core/api-error-language.ts";
+test("Studio budget errors retain actionable application text without exposing arbitrary errors", () => {
+  const price = "A current confirmed per-request price ceiling is required";
+  assert.equal(apiErrorMessage("en", price, 409), price);
+  assert.match(apiErrorMessage("de", price, 409), /Preisobergrenze/);
+  assert.match(
+    apiErrorMessage(
+      "en",
+      "Fixed project external budget or request limit reached; no provider call started",
+      409,
+    ),
+    /no provider call/,
+  );
+  assert.doesNotMatch(
+    apiErrorMessage("en", "Upstream returned secret-token", 409),
+    /secret-token/,
+  );
+});

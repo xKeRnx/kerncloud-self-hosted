@@ -554,7 +554,7 @@ integrations.push(
     "ayrshare",
     "Ayrshare Social Media",
     "Social media",
-    "Connect profiles in Ayrshare; inspect connected accounts and history. Publish approved text posts to supported text networks. A separate provider plan is required.",
+    "Connect profiles in Ayrshare; inspect connected accounts and history. Prepare text and media in Content Studio with exact publication approval and fixed request limits. A separate provider plan is required.",
     "https://www.ayrshare.com/docs/introduction",
     [
       action("profiles", "Inspect connected profiles"),

@@ -492,8 +492,8 @@ export function DecisionInbox({
           <ShieldCheck size={30} />
           <h2>
             {t(
-              "Hier wartet gerade nichts auf dich.",
-              "Nothing needs your input here.",
+              "Keine Agenten-Anfragen in dieser Ansicht.",
+              "No agent requests in this view.",
             )}
           </h2>
           <p>
