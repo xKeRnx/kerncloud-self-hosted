@@ -47,11 +47,54 @@
         </p>
       </section>
       <section class="panel" id="connection-panel">
-        <h2 data-en="Where is your workspace?" data-de="Wo ist dein Workspace?">Where is your workspace?</h2>
-        <form id="connection-form"><label><span data-en="Connection" data-de="Verbindung">Connection</span>
-          <select id="connection-mode"><option value="local" data-en="Run on this computer" data-de="Auf diesem Rechner betreiben">Run on this computer</option><option value="remote" data-en="Connect to an existing server" data-de="Mit vorhandenem Server verbinden">Connect to an existing server</option></select></label>
-          <label id="server-address-row" hidden><span data-en="Server HTTPS address" data-de="HTTPS-Serveradresse">Server HTTPS address</span><input id="server-address" type="url" placeholder="https://workspace.example.com" /></label>
-          <div class="actions"><button type="submit" data-en="Save connection" data-de="Verbindung speichern">Save connection</button><button type="button" data-action="open" data-en="Open workspace" data-de="Workspace öffnen">Open workspace</button></div>
+        <h2 data-en="Where is your workspace?" data-de="Wo ist dein Workspace?">
+          Where is your workspace?
+        </h2>
+        <form id="connection-form">
+          <label
+            ><span data-en="Connection" data-de="Verbindung">Connection</span>
+            <select id="connection-mode">
+              <option
+                value="local"
+                data-en="Run on this computer"
+                data-de="Auf diesem Rechner betreiben"
+              >
+                Run on this computer
+              </option>
+              <option
+                value="remote"
+                data-en="Connect to an existing server"
+                data-de="Mit vorhandenem Server verbinden"
+              >
+                Connect to an existing server
+              </option>
+            </select></label
+          >
+          <label id="server-address-row" hidden
+            ><span data-en="Server HTTPS address" data-de="HTTPS-Serveradresse"
+              >Server HTTPS address</span
+            ><input
+              id="server-address"
+              type="url"
+              placeholder="https://workspace.example.com"
+          /></label>
+          <div class="actions">
+            <button
+              type="submit"
+              class="primary"
+              data-en="Save connection"
+              data-de="Verbindung speichern"
+            >
+              Save connection</button
+            ><button
+              type="button"
+              data-action="open"
+              data-en="Open workspace"
+              data-de="Workspace öffnen"
+            >
+              Open workspace
+            </button>
+          </div>
           <p id="connection-message" role="status"></p>
         </form>
       </section>
@@ -142,9 +185,9 @@
               ><span
                 data-en="The first start downloads the release images. Follow each step in Local services above. Later starts reuse the existing images."
                 data-de="Der erste Start lädt die fertigen Release-Images. Den Fortschritt siehst du oben unter Lokale Dienste. Spätere Starts verwenden vorhandene Images."
-                >The first start downloads the release images.
-                Follow each step in Local services above. Later starts reuse the
-                existing images.</span
+                >The first start downloads the release images. Follow each step
+                in Local services above. Later starts reuse the existing
+                images.</span
               >
             </li>
             <li>
@@ -268,17 +311,48 @@
           <span id="app-update-version" class="state-badge"></span>
         </div>
         <p id="app-update-status" role="status" aria-live="polite"></p>
-        <progress id="app-update-progress" max="100" hidden aria-label="Update download"></progress>
-        <label class="update-preference"><input type="checkbox" id="automatic-updates" checked />
-          <span data-en="Automatically check and download updates" data-de="Updates automatisch prüfen und herunterladen">Automatically check and download updates</span>
+        <progress
+          id="app-update-progress"
+          max="100"
+          hidden
+          aria-label="Update download"
+        ></progress>
+        <label class="update-preference"
+          ><input type="checkbox" id="automatic-updates" checked />
+          <span
+            data-en="Automatically check and download updates"
+            data-de="Updates automatisch prüfen und herunterladen"
+            >Automatically check and download updates</span
+          >
         </label>
         <div class="actions">
-          <button id="check-app-update" data-en="Check for updates" data-de="Nach Updates suchen">Check for updates</button>
-          <button id="install-app-update" class="primary" hidden data-en="Install & restart app" data-de="Installieren & App neu starten">Install & restart app</button>
+          <button
+            id="check-app-update"
+            data-en="Check for updates"
+            data-de="Nach Updates suchen"
+          >
+            Check for updates
+          </button>
+          <button
+            id="install-app-update"
+            class="primary"
+            hidden
+            data-en="Install & restart app"
+            data-de="Installieren & App neu starten"
+          >
+            Install & restart app
+          </button>
         </div>
-        <p class="hint" data-en="Downloaded updates can install the next time you open the app. Linux may request system permission. Local services keep running; your configuration, data and access permissions stay in place. Apply a new server version separately with Update local server, which creates a backup first."
-          data-de="Geladene Updates können beim nächsten Öffnen der App installiert werden. Linux kann eine Systemfreigabe anfordern. Lokale Dienste laufen weiter; Konfiguration, Daten und Freigaben bleiben erhalten. Eine neue Serverversion spielst du separat über Lokalen Server aktualisieren ein; dabei wird vorher ein Backup erstellt.">
-          Downloaded updates can install the next time you open the app. Linux may request system permission. Local services keep running; your configuration, data and access permissions stay in place. Apply a new server version separately with Update local server, which creates a backup first.
+        <p
+          class="hint"
+          data-en="Downloaded updates can install the next time you open the app. Linux may request system permission. Local services keep running; your configuration, data and access permissions stay in place. Apply a new server version separately with Update local server, which creates a backup first."
+          data-de="Geladene Updates können beim nächsten Öffnen der App installiert werden. Linux kann eine Systemfreigabe anfordern. Lokale Dienste laufen weiter; Konfiguration, Daten und Freigaben bleiben erhalten. Eine neue Serverversion spielst du separat über Lokalen Server aktualisieren ein; dabei wird vorher ein Backup erstellt."
+        >
+          Downloaded updates can install the next time you open the app. Linux
+          may request system permission. Local services keep running; your
+          configuration, data and access permissions stay in place. Apply a new
+          server version separately with Update local server, which creates a
+          backup first.
         </p>
       </section>
       <section class="panel" data-context="maintenance" data-local-only>

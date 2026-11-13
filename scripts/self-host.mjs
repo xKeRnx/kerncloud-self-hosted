@@ -85,7 +85,7 @@ export function prepare(root = projectRoot, options = {}) {
     KERNCLOUD_PORT: String(port),
     KERNCLOUD_GATEWAY_PORT: String(gatewayPort),
     KERNCLOUD_DB_NAME: database,
-    KERNCLOUD_IMAGE: "kerncloud-selfhost:0.40.0",
+    KERNCLOUD_IMAGE: "kerncloud-selfhost:0.40.1",
     KERNCLOUD_BIND_ADDRESS: "127.0.0.1",
     POSTGRES_PASSWORD: password,
     DATABASE_URL:

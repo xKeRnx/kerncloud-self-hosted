@@ -808,3 +808,188 @@
 .panel.project-pages {
   padding: 24px;
 }
+/* Local account management shares the workspace card and button system. */
+.local-users > .workspace-page-heading {
+  margin-bottom: 0;
+}
+.local-user-setup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+.local-users .panel {
+  margin: 0;
+  min-width: 0;
+  border-color: var(--ui-line, var(--border));
+  border-radius: 16px;
+}
+.local-users .local-user-card {
+  padding: 26px;
+}
+.local-user-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.local-users .local-user-card-title h2 {
+  font-size: 18px;
+  line-height: 1.4;
+  margin: 0;
+}
+.local-user-card-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  color: var(--ui-accent);
+  background: var(--ui-accent-soft);
+}
+.local-user-card > p {
+  color: var(--ui-muted);
+  font-size: 14px;
+  line-height: 1.7;
+  max-width: 72ch;
+  margin: 18px 0 22px;
+}
+.local-users .form-grid {
+  gap: 18px;
+}
+.local-users .field {
+  margin: 0;
+}
+.local-users .local-user-hint {
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+.local-user-card .button-row {
+  margin-top: 22px;
+}
+.local-user-card button,
+.local-account-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.local-accounts-title {
+  padding: 24px 26px;
+  border-bottom: 1px solid var(--ui-line, var(--border));
+}
+.local-account-count {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  margin-left: auto;
+  padding: 0 8px;
+  border-radius: 8px;
+  background: var(--ui-subtle);
+  color: var(--ui-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+.local-account-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 26px;
+  border-bottom: 1px solid var(--ui-line, var(--border));
+}
+.local-account-row:last-child {
+  border-bottom: 0;
+}
+.local-account-person {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+.local-account-person > div {
+  min-width: 0;
+}
+.local-account-person strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.local-account-person p {
+  margin: 5px 0 10px;
+  color: var(--ui-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.local-account-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent);
+  font-weight: 700;
+}
+.local-account-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.local-account-badges > span {
+  padding: 4px 8px;
+  border: 1px solid var(--ui-line, var(--border));
+  border-radius: 6px;
+  color: var(--ui-muted);
+  font-size: 11px;
+  line-height: 1.4;
+  background: var(--ui-subtle);
+}
+.local-account-badges .is-active {
+  color: var(--ui-success);
+  background: var(--ui-success-soft);
+  border-color: var(--ui-success-line);
+}
+.local-account-badges .is-suspended {
+  color: var(--ui-danger);
+  background: var(--ui-danger-soft);
+  border-color: var(--ui-danger-line);
+}
+.local-account-badges .is-pending {
+  color: var(--ui-warning);
+  background: var(--ui-warning-soft);
+  border-color: var(--ui-warning-line);
+}
+.local-accounts-empty {
+  padding: 24px 26px;
+  color: var(--ui-muted);
+}
+.local-invitation-link {
+  margin: 0;
+}
+@media (max-width: 1100px) {
+  .local-user-setup {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .local-users .local-user-card,
+  .local-accounts-title,
+  .local-account-row {
+    padding: 20px;
+  }
+  .local-account-actions {
+    width: 100%;
+  }
+  .local-account-actions button {
+    flex: 1 1 auto;
+    white-space: normal;
+  }
+  .local-user-setup {
+    gap: 20px;
+  }
+}

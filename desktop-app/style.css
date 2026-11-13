@@ -206,7 +206,7 @@ header select {
   padding: 10px;
   border: 1px solid #8190a5;
   border-radius: 8px;
-  background: white;
+  background-color: white;
   color: #17283f;
   min-width: 0;
 }
@@ -412,9 +412,21 @@ button:disabled {
     transform: translateX(400%);
   }
 }
-.update-preference { display: flex; align-items: center; gap: 10px; margin: 18px 0; }
-#app-update-progress { display: block; width: 100%; height: 12px; accent-color: #4549f5; }
-#app-update-progress[hidden] { display: none; }
+.update-preference {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0;
+}
+#app-update-progress {
+  display: block;
+  width: 100%;
+  height: 12px;
+  accent-color: #4549f5;
+}
+#app-update-progress[hidden] {
+  display: none;
+}
 @media (prefers-reduced-motion: reduce) {
   .activity-icon,
   .activity-track span {
@@ -448,5 +460,81 @@ button:disabled {
   }
   .panel {
     padding: 20px;
+  }
+}
+/* Apply one field style to every launcher form, including connection mode. */
+select,
+input:not([type="checkbox"]):not([type="radio"]) {
+  font: inherit;
+  font-size: 14px;
+  min-height: 44px;
+  width: 100%;
+  min-width: 0;
+  padding: 11px 13px;
+  border: 1px solid #8190a5;
+  border-radius: 9px;
+  background: #fff;
+  color: #17283f;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+select {
+  appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2353657f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+  cursor: pointer;
+}
+select:hover:not(:disabled),
+input:not([type="checkbox"]):not([type="radio"]):hover:not(:disabled) {
+  border-color: #526d9d;
+}
+select:focus-visible {
+  outline: 3px solid #2555ee;
+  outline-offset: 3px;
+}
+select:disabled,
+input:disabled {
+  background-color: #e7edf5;
+  color: #4c5c71;
+  cursor: not-allowed;
+}
+header select {
+  width: auto;
+  min-height: 36px;
+  font-size: 13px;
+  padding: 7px 34px 7px 12px;
+}
+#connection-form {
+  display: grid;
+  gap: 20px;
+  max-width: 760px;
+}
+#connection-form > label {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+#connection-form > label > span {
+  font-weight: 600;
+}
+#connection-form .actions {
+  margin: 0;
+}
+#connection-message {
+  margin: 0;
+  color: #42536b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+#connection-message:empty {
+  display: none;
+}
+@media (forced-colors: active) {
+  select {
+    appearance: auto;
+    background-image: none;
   }
 }

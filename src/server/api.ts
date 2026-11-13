@@ -696,7 +696,7 @@ export async function handle(req: NextRequest, path: string) {
       return NextResponse.json({
         status: "ok",
         service: "kerncloud",
-        version: "0.40.0",
+        version: "0.40.1",
         edition: selfHostedEdition ? "self-hosted" : "operator",
       });
     if (path === "billing/webhook" && req.method === "POST")
